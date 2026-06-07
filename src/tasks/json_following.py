@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 
 def _extract_first_object(text: str) -> str | None:

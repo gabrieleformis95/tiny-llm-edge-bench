@@ -7,8 +7,8 @@ Metric: compliance_rate (fraction of prompts where all constraints are satisfied
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 
 class InstructionFollowTask:
@@ -65,7 +65,7 @@ class InstructionFollowTask:
             elif kind == "sentence_count":
                 results.append(len(sentences) == c["value"])
             elif kind == "line_count":
-                lines = [l for l in text.splitlines() if l.strip()]
+                lines = [ln for ln in text.splitlines() if ln.strip()]
                 results.append(len(lines) == c["value"])
             elif kind == "format":
                 fmt = c["value"]

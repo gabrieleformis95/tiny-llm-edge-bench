@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 import threading
 import time
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 import psutil
 
@@ -54,6 +55,7 @@ def _mlx_active_memory() -> int | None:
     """Return MLX active unified memory in bytes, or None if not available."""
     try:
         import mlx.core as mx  # type: ignore[import]
+
         return mx.metal.get_active_memory()
     except Exception:
         return None

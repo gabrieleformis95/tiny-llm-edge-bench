@@ -7,8 +7,8 @@ Falls back to first-token comparison if logits_all is unreliable.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 
 class MMLUSubsetTask:
@@ -36,7 +36,7 @@ class MMLUSubsetTask:
         """Format MMLU question with A/B/C/D choices."""
         choices_text = "\n".join(
             f"{letter}. {text}"
-            for letter, text in zip(self.CHOICES, sample["choices"])
+            for letter, text in zip(self.CHOICES, sample["choices"], strict=False)
         )
         return (
             f"The following is a multiple-choice question. "

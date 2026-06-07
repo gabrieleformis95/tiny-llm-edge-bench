@@ -22,7 +22,7 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Optional
+
 
 def _rouge_l_f1(prediction: str, reference: str) -> float:
     """ROUGE-L F1 (token-level LCS). Inlined to avoid import deps."""
@@ -45,6 +45,7 @@ def _rouge_l_f1(prediction: str, reference: str) -> float:
         return 0.0
     return 2 * precision * recall / (precision + recall)
 
+
 P1_ROOT = Path(__file__).parents[2] / "predictive-maintenance-copilot"
 P1_GOLDEN = P1_ROOT / "data" / "ragas_golden.json"
 P2_README = Path(__file__).parents[1] / "README.md"
@@ -66,11 +67,13 @@ _P2_MARKER_END = "<!-- CROSS-PROJECT-RESULT-END -->"
 
 
 def _call_ollama(question: str, model: str = "mistral") -> str:
-    payload = json.dumps({
-        "model": model,
-        "prompt": f"{_QA_SYSTEM}\n\nQuestion: {question}\nAnswer:",
-        "stream": False,
-    }).encode()
+    payload = json.dumps(
+        {
+            "model": model,
+            "prompt": f"{_QA_SYSTEM}\n\nQuestion: {question}\nAnswer:",
+            "stream": False,
+        }
+    ).encode()
     req = urllib.request.Request(
         "http://localhost:11434/api/generate",
         data=payload,
@@ -82,14 +85,16 @@ def _call_ollama(question: str, model: str = "mistral") -> str:
 
 
 def _call_groq(question: str, api_key: str, model: str = "llama-3.3-70b-versatile") -> str:
-    payload = json.dumps({
-        "model": model,
-        "messages": [
-            {"role": "system", "content": _QA_SYSTEM},
-            {"role": "user", "content": question},
-        ],
-        "max_tokens": 512,
-    }).encode()
+    payload = json.dumps(
+        {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": _QA_SYSTEM},
+                {"role": "user", "content": question},
+            ],
+            "max_tokens": 512,
+        }
+    ).encode()
     req = urllib.request.Request(
         "https://api.groq.com/openai/v1/chat/completions",
         data=payload,
@@ -123,11 +128,7 @@ def _call_local_gguf(
         n_gpu_layers=n_gpu_layers,
         verbose=False,
     )
-    prompt = (
-        f"<|system|>\n{_QA_SYSTEM}<|end|>\n"
-        f"<|user|>\n{question}<|end|>\n"
-        "<|assistant|>"
-    )
+    prompt = f"<|system|>\n{_QA_SYSTEM}<|end|>\n<|user|>\n{question}<|end|>\n<|assistant|>"
     output = model(prompt, max_tokens=512, temperature=0.0, echo=False)
     return str(output["choices"][0]["text"])
 
@@ -135,14 +136,14 @@ def _call_local_gguf(
 def run_provider(
     samples: list[dict],
     provider: str,
-    groq_api_key: Optional[str],
-    gguf_path: Optional[Path],
+    groq_api_key: str | None,
+    gguf_path: Path | None,
 ) -> tuple[float, list[float]]:
     scores: list[float] = []
     for i, s in enumerate(samples):
         q = s["question"]
         ref = s["ground_truth"]
-        print(f"  [{provider}] sample {i+1}/{len(samples)}: {q[:60]}...", flush=True)
+        print(f"  [{provider}] sample {i + 1}/{len(samples)}: {q[:60]}...", flush=True)
         try:
             if provider == "ollama":
                 pred = _call_ollama(q)
@@ -202,10 +203,7 @@ def _update_p2_readme(pct: float, baseline_score: float, local_score: float) -> 
         # Append after the cross-project section
         target = "- P1's `src/llm/client.py` factory accepts `LLM_PROVIDER=tinyllm_local`"
         if target in text:
-            insert_after = text.find(target)
-            insert_after = text.find("\n", insert_after) + 1
-            updated = text[:insert_after] + f"  loads a GGUF via llama-cpp-python.\n\n{sentence}\n" + text[insert_after:]
-            # simpler: just append the sentence after the cross-project block
+            # Append the sentence after the cross-project block
             P2_README.write_text(
                 text.replace(
                     "---\n\n## Models Benchmarked",
@@ -226,8 +224,12 @@ def main() -> None:
         type=Path,
         help="Path to Phi-3.5-mini Q4_K_M .gguf file",
     )
-    parser.add_argument("--groq-api-key", default=None, help="Groq API key (fallback if Ollama unavailable)")
-    parser.add_argument("--write-readmes", action="store_true", help="Update both READMEs with the result")
+    parser.add_argument(
+        "--groq-api-key", default=None, help="Groq API key (fallback if Ollama unavailable)"
+    )
+    parser.add_argument(
+        "--write-readmes", action="store_true", help="Update both READMEs with the result"
+    )
     args = parser.parse_args()
 
     if not P1_GOLDEN.exists():

@@ -16,7 +16,11 @@ from src.inference.base import GenerationResult
 def _mock_backend(reply: str = "A") -> MagicMock:
     backend = MagicMock()
     backend.generate.return_value = GenerationResult(
-        text=reply, ttft_ms=None, tpot_ms=5.0, total_tokens=10, prompt_tokens=5,
+        text=reply,
+        ttft_ms=None,
+        tpot_ms=5.0,
+        total_tokens=10,
+        prompt_tokens=5,
     )
     return backend
 
@@ -30,10 +34,12 @@ def _disable_groq_judge(monkeypatch):
     """Keep the suite hermetic: force the ROUGE-L path so the ragas task never
     makes a live Groq call when GROQ_API_KEY happens to be set (e.g. via .env)."""
     from src.config import settings
+
     monkeypatch.setattr(settings, "groq_api_key", "", raising=False)
 
 
 # --- ragas_industrial ---
+
 
 def test_ragas_industrial_pipeline_schema():
     from src.tasks.ragas_industrial import RagasIndustrialTask
@@ -57,6 +63,7 @@ def test_ragas_industrial_pipeline_schema():
 
 
 # --- mmlu_subset ---
+
 
 def test_mmlu_pipeline_schema(tmp_path):
     from src.tasks.mmlu_subset import MMLUSubsetTask
@@ -82,6 +89,7 @@ def test_mmlu_pipeline_schema(tmp_path):
 
 # --- json_following ---
 
+
 def test_json_following_pipeline_schema():
     from src.tasks.json_following import JSONFollowingTask
 
@@ -100,6 +108,7 @@ def test_json_following_pipeline_schema():
 
 # --- instruction_follow ---
 
+
 def test_instruction_follow_pipeline_schema():
     from src.tasks.instruction_follow import InstructionFollowTask
 
@@ -117,6 +126,7 @@ def test_instruction_follow_pipeline_schema():
 
 
 # --- schema field completeness ---
+
 
 def test_quality_result_serializable():
     from src.tasks.ragas_industrial import RagasIndustrialTask

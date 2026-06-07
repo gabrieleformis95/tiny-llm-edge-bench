@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from src.config import ModelSpec, QuantSpec, HardwareProfile, TaskSpec
-from pathlib import Path
+from src.config import HardwareProfile, ModelSpec, QuantSpec, TaskSpec
 
 
 @pytest.fixture

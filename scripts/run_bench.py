@@ -52,18 +52,15 @@ def run_benchmark(
         print(f"[skip] Run already exists: {existing}")
         return existing
 
-    from src.registry.downloader import download_gguf
     from src.benchmarks.memory import measure_peak_memory
-    from src.benchmarks.power_mac import measure_energy_mac
     from src.benchmarks.power_analytical import estimate_energy_analytical, merge_energy_results
+    from src.benchmarks.power_mac import measure_energy_mac
     from src.benchmarks.quality import run_quality_benchmark
-    from src.benchmarks.throughput import run_throughput_benchmark, N_MEASURED
+    from src.benchmarks.throughput import N_MEASURED, run_throughput_benchmark
     from src.config import BenchmarkRun, settings
-    from src.registry.hardware import detect_hardware
-    from src.registry.models import get_model, get_quant
-    from src.registry.tasks import get_task
-
+    from src.registry.downloader import download_gguf
     from src.registry.fingerprint import capture_fingerprint
+    from src.registry.tasks import get_task
 
     model = get_model(model_id)
     quant = get_quant(quant_name)
@@ -73,11 +70,16 @@ def run_benchmark(
     gguf_path = download_gguf(model_id, quant_name)
 
     # Build backend
+    from src.inference.base import InferenceBackend
+
+    backend: InferenceBackend
     if backend_name == "llama_cpp":
         from src.inference.llama_cpp_backend import LlamaCppBackend
+
         backend = LlamaCppBackend()
     else:
         from src.inference.mlx_backend import MLXBackend
+
         backend = MLXBackend()
 
     with backend:
@@ -90,8 +92,10 @@ def run_benchmark(
         throughput_result, mem_result = measure_peak_memory(_throughput)
 
         # Energy: measured (powermetrics + baseline) + analytical (MAC count)
-        avg_output_tokens = int(throughput_result.median_tpot_ms and
-                                256 * N_MEASURED or 256)  # approx tokens for KPI
+        avg_output_tokens = int(
+            throughput_result.median_tpot_ms and 256 * N_MEASURED or 256
+        )  # approx tokens for KPI
+
         def _energy_pass():
             return run_throughput_benchmark(backend)
 

@@ -19,9 +19,7 @@ import json
 import re
 import shutil
 import subprocess
-import tempfile
 from pathlib import Path
-from typing import Optional
 
 _FIRMWARE_DIR = Path(__file__).parent / "firmware"
 _FIRMWARE_ELF = _FIRMWARE_DIR / "firmware.elf"
@@ -50,19 +48,18 @@ def _docker_renode_available() -> bool:
     try:
         result = subprocess.run(
             ["docker", "image", "inspect", _DOCKER_IMAGE],
-            capture_output=True, timeout=5,
+            capture_output=True,
+            timeout=5,
         )
         return result.returncode == 0
     except Exception:
         return False
 
 
-def _run_renode_native(elf_path: Path, timeout_s: int = 120) -> Optional[str]:
+def _run_renode_native(elf_path: Path, timeout_s: int = 120) -> str | None:
     """Launch native Renode and return captured output."""
     resc_path = elf_path.parent / "_renode_run.resc"
-    resc_path.write_text(
-        _RENODE_SCRIPT_TEMPLATE.format(elf_path=str(elf_path.resolve()))
-    )
+    resc_path.write_text(_RENODE_SCRIPT_TEMPLATE.format(elf_path=str(elf_path.resolve())))
     cmd = ["renode", "--disable-xwt", "--console", str(resc_path)]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s)
@@ -76,7 +73,7 @@ def _run_renode_native(elf_path: Path, timeout_s: int = 120) -> Optional[str]:
         resc_path.unlink(missing_ok=True)
 
 
-def _run_renode_docker(elf_path: Path, timeout_s: int = 240) -> Optional[str]:
+def _run_renode_docker(elf_path: Path, timeout_s: int = 240) -> str | None:
     """Run Renode via Docker and return captured output.
 
     The .resc is written into the firmware dir (the only reliably bind-mountable
@@ -84,15 +81,18 @@ def _run_renode_docker(elf_path: Path, timeout_s: int = 240) -> Optional[str]:
     """
     firmware_dir = elf_path.parent.resolve()
     resc_path = firmware_dir / "_renode_run.resc"
-    resc_path.write_text(
-        _RENODE_SCRIPT_TEMPLATE.format(elf_path="/firmware/firmware.elf")
-    )
+    resc_path.write_text(_RENODE_SCRIPT_TEMPLATE.format(elf_path="/firmware/firmware.elf"))
     cmd = [
-        "docker", "run", "--rm",
-        "--platform", "linux/amd64",
-        "-v", f"{firmware_dir}:/firmware:ro",
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "-v",
+        f"{firmware_dir}:/firmware:ro",
         _DOCKER_IMAGE,
-        "/bin/sh", "-c",
+        "/bin/sh",
+        "-c",
         "renode --disable-xwt --console /firmware/_renode_run.resc 2>&1",
     ]
     try:
@@ -107,7 +107,7 @@ def _run_renode_docker(elf_path: Path, timeout_s: int = 240) -> Optional[str]:
         resc_path.unlink(missing_ok=True)
 
 
-def _run_renode(elf_path: Path) -> Optional[str]:
+def _run_renode(elf_path: Path) -> str | None:
     """Try native Renode, then Docker, return output or None."""
     if _renode_is_available():
         print("[renode] Using native binary.")
@@ -173,7 +173,8 @@ def _analytical_fallback() -> dict:
             "Dynamic range quantization (INT8 weights, float32 activations). "
             "MSE delta 0.005 < 0.05 target. Calibrated on 200 real FD001 windows "
             "(first 50 cycles per engine, healthy regime, StandardScaler normalized)."
-            if tflite_path.exists() else ""
+            if tflite_path.exists()
+            else ""
         ),
         "joules_per_inference_estimated": est.joules_per_inference_estimated,
         "estimation_method": est.estimation_method,
@@ -181,7 +182,7 @@ def _analytical_fallback() -> dict:
     }
 
 
-def _get_elf_flash_size(elf_path: Path) -> Optional[int]:
+def _get_elf_flash_size(elf_path: Path) -> int | None:
     """Read .text section size from ELF via arm-none-eabi-size."""
     if not elf_path.exists():
         return None
@@ -201,7 +202,7 @@ def _get_elf_flash_size(elf_path: Path) -> Optional[int]:
 
 def run_mcu_benchmark(
     elf_path: Path = _FIRMWARE_ELF,
-    out_json: Optional[Path] = None,
+    out_json: Path | None = None,
 ) -> dict:
     """Run MCU benchmark: Renode simulation if available, else analytical fallback.
 
@@ -212,8 +213,7 @@ def run_mcu_benchmark(
     """
     if not elf_path.exists():
         raise FileNotFoundError(
-            f"firmware.elf not found at {elf_path}. "
-            "Run `make -C src/mcu/firmware` first."
+            f"firmware.elf not found at {elf_path}. Run `make -C src/mcu/firmware` first."
         )
 
     if _renode_is_available() or _docker_renode_available():
@@ -221,7 +221,8 @@ def run_mcu_benchmark(
         raw = _run_renode(elf_path)
         parsed = _parse_renode_output(raw) if raw else {}
         if raw and parsed.get("executed_instructions"):
-            from src.mcu.cmsis_nn_energy import energy_from_cycles, _CLOCK_HZ
+            from src.mcu.cmsis_nn_energy import _CLOCK_HZ, energy_from_cycles
+
             instr = int(parsed["executed_instructions"])
             # Keep analytical flash/SRAM/MACs/INT8 stats; override timing with the
             # real executed-instruction count measured by Renode (functional sim).
@@ -271,11 +272,10 @@ def run_mcu_benchmark(
 
 if __name__ == "__main__":
     from pathlib import Path
-    result = run_mcu_benchmark(
-        out_json=Path("results/mcu_benchmark.json")
-    )
+
+    result = run_mcu_benchmark(out_json=Path("results/mcu_benchmark.json"))
     print("\nMCU benchmark result:")
     for k, v in result.items():
         if k != "notes":
             print(f"  {k}: {v}")
-    print(f"  notes: {result.get('notes','')[:120]}...")
+    print(f"  notes: {result.get('notes', '')[:120]}...")

@@ -22,7 +22,6 @@ All outputs are labeled ESTIMATED.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 # Lai et al. 2018 - Cortex-M4 @ 168MHz
 _PJ_PER_MAC_CORTEX_M4 = 20.0
@@ -41,12 +40,13 @@ _ACTIVATION_CORRECTION = 1.20
 @dataclass
 class MCUEnergyEstimate:
     """Analytical energy estimate for one inference pass on Cortex-M4."""
+
     total_macs: int
     pj_per_mac: float
-    raw_joules: float                    # before correction
+    raw_joules: float  # before correction
     joules_per_inference_estimated: float  # after activation correction
-    cycles_estimated: int               # at _SIMD_THROUGHPUT_FACTOR
-    latency_us_estimated: float         # at _CLOCK_HZ
+    cycles_estimated: int  # at _SIMD_THROUGHPUT_FACTOR
+    latency_us_estimated: float  # at _CLOCK_HZ
     estimation_method: str
     notes: str
 
@@ -95,9 +95,7 @@ def count_lstm_macs(
     # output_layer: hidden_dim -> n_features per step
     output_macs = window_size * hidden_dim * n_features
 
-    return (
-        encoder_macs + to_latent_macs + latent_proj_macs + decoder_macs + output_macs
-    )
+    return encoder_macs + to_latent_macs + latent_proj_macs + decoder_macs + output_macs
 
 
 def energy_from_cycles(
@@ -159,9 +157,9 @@ def estimate_mcu_energy(
             f"ESTIMATED (analytical). "
             f"MACs = {total_macs:,} (LSTM encoder+decoder + projections). "
             f"pJ/MAC = {pj_per_mac} (Lai et al. 2018, Cortex-M4 @ 168 MHz). "
-            f"+{int((_ACTIVATION_CORRECTION-1)*100)}% correction for LSTM sigmoid/tanh overhead. "
+            f"+{int((_ACTIVATION_CORRECTION - 1) * 100)}% correction for LSTM sigmoid/tanh overhead. "
             f"SIMD factor = {simd_factor}x (SIMD32 VMLA, conservative). "
-            f"Clock = {clock_hz//1_000_000} MHz. "
+            f"Clock = {clock_hz // 1_000_000} MHz. "
             "DRAM access energy (~65 pJ/8-byte read) excluded: true energy is higher."
         ),
     )

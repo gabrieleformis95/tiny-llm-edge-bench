@@ -10,8 +10,8 @@ from pathlib import Path
 @dataclass
 class GenerationResult:
     text: str
-    ttft_ms: float | None   # None unless backend uses streaming mode
-    tpot_ms: float          # time-per-output-token in ms
+    ttft_ms: float | None  # None unless backend uses streaming mode
+    tpot_ms: float  # time-per-output-token in ms
     total_tokens: int
     prompt_tokens: int
 
@@ -46,7 +46,7 @@ class InferenceBackend(ABC):
         """Release model weights from memory."""
         raise NotImplementedError
 
-    def __enter__(self) -> "InferenceBackend":
+    def __enter__(self) -> InferenceBackend:
         return self
 
     def __exit__(self, *_: object) -> None:

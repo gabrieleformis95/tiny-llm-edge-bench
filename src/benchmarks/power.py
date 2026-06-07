@@ -10,7 +10,8 @@ import re
 import subprocess
 import threading
 import time
-from typing import Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 from src.config import PowerResult, settings
 
@@ -19,7 +20,7 @@ T = TypeVar("T")
 _SAMPLE_MS = 100  # powermetrics sample interval in ms
 
 
-def measure_power(fn: Callable[[], T]) -> tuple[T, Optional[PowerResult]]:
+def measure_power(fn: Callable[[], T]) -> tuple[T, PowerResult | None]:
     """Run fn() under powermetrics sampling; return (result, PowerResult | None)."""
     if settings.skip_power_measurement:
         return fn(), None
@@ -27,6 +28,7 @@ def measure_power(fn: Callable[[], T]) -> tuple[T, Optional[PowerResult]]:
         return fn(), None
     if not _has_sudo():
         import warnings
+
         warnings.warn(
             "sudo unavailable - skipping power measurement. "
             "Run 'sudo -v' once before benchmarking to enable it.",
@@ -39,8 +41,16 @@ def measure_power(fn: Callable[[], T]) -> tuple[T, Optional[PowerResult]]:
 
     def _run_powermetrics() -> None:
         proc = subprocess.Popen(
-            ["sudo", "powermetrics", "--samplers", "cpu_power,gpu_power",
-             "-i", str(_SAMPLE_MS), "-f", "plist"],
+            [
+                "sudo",
+                "powermetrics",
+                "--samplers",
+                "cpu_power,gpu_power",
+                "-i",
+                str(_SAMPLE_MS),
+                "-f",
+                "plist",
+            ],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
@@ -78,7 +88,5 @@ def measure_power(fn: Callable[[], T]) -> tuple[T, Optional[PowerResult]]:
 
 def _has_sudo() -> bool:
     """Check whether we can run sudo without a password prompt."""
-    result = subprocess.run(
-        ["sudo", "-n", "true"], capture_output=True
-    )
+    result = subprocess.run(["sudo", "-n", "true"], capture_output=True)
     return result.returncode == 0

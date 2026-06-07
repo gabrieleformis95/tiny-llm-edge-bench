@@ -6,8 +6,6 @@ Or: make ui
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 
@@ -34,8 +32,12 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Filters")
-        models = st.multiselect("Models", df["model_id"].unique(), default=list(df["model_id"].unique()))
-        quants = st.multiselect("Quants", df["quant_name"].unique(), default=list(df["quant_name"].unique()))
+        models = st.multiselect(
+            "Models", df["model_id"].unique(), default=list(df["model_id"].unique())
+        )
+        quants = st.multiselect(
+            "Quants", df["quant_name"].unique(), default=list(df["quant_name"].unique())
+        )
         tasks = ["All"] + list(df["task_id"].dropna().unique())
         task_filter = st.selectbox("Task", tasks)
 
@@ -52,7 +54,9 @@ def main() -> None:
     with col2:
         st.subheader("Quality Score")
         if "quality_score" in view.columns:
-            st.bar_chart(view.dropna(subset=["quality_score"]).set_index("model_id")[["quality_score"]])
+            st.bar_chart(
+                view.dropna(subset=["quality_score"]).set_index("model_id")[["quality_score"]]
+            )
 
     st.subheader("Full Results Table")
     st.dataframe(view, use_container_width=True)

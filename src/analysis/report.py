@@ -23,6 +23,7 @@ def generate_report(
 ) -> None:
     """Generate all report artifacts from aggregated DataFrame."""
     import matplotlib
+
     matplotlib.use("Agg")
 
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -43,15 +44,25 @@ def generate_report(
 # Plots
 # ---------------------------------------------------------------------------
 
+
 def _plot_pareto_quality_latency(df: pd.DataFrame, out_path: Path) -> None:
     import matplotlib.pyplot as plt
+
     from src.analysis.pareto import pareto_front
 
     fig, ax = plt.subplots(figsize=(8, 5))
     sub = df.dropna(subset=["tpot_ms_median", "quality_score"])
     if sub.empty:
-        ax.text(0.5, 0.5, "No quality data yet\n(run `make bench-all`)",
-                ha="center", va="center", transform=ax.transAxes, fontsize=12, color="gray")
+        ax.text(
+            0.5,
+            0.5,
+            "No quality data yet\n(run `make bench-all`)",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=12,
+            color="gray",
+        )
     else:
         for model_id, group in sub.groupby("model_id"):
             front = pareto_front(group, "tpot_ms_median", "quality_score")
@@ -67,13 +78,22 @@ def _plot_pareto_quality_latency(df: pd.DataFrame, out_path: Path) -> None:
 
 def _plot_pareto_quality_ram(df: pd.DataFrame, out_path: Path) -> None:
     import matplotlib.pyplot as plt
+
     from src.analysis.pareto import pareto_front
 
     fig, ax = plt.subplots(figsize=(8, 5))
     sub = df.dropna(subset=["peak_rss_mb", "quality_score"])
     if sub.empty:
-        ax.text(0.5, 0.5, "No quality data yet\n(run `make bench-all`)",
-                ha="center", va="center", transform=ax.transAxes, fontsize=12, color="gray")
+        ax.text(
+            0.5,
+            0.5,
+            "No quality data yet\n(run `make bench-all`)",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=12,
+            color="gray",
+        )
     else:
         for model_id, group in sub.groupby("model_id"):
             front = pareto_front(group, "peak_rss_mb", "quality_score")
@@ -89,18 +109,31 @@ def _plot_pareto_quality_ram(df: pd.DataFrame, out_path: Path) -> None:
 
 def _plot_pareto_quality_energy(df: pd.DataFrame, out_path: Path) -> None:
     import matplotlib.pyplot as plt
+
     from src.analysis.pareto import pareto_front
 
     fig, ax = plt.subplots(figsize=(8, 5))
     sub = df.dropna(subset=["estimated_tokens_per_joule", "quality_score"])
     if sub.empty:
-        ax.text(0.5, 0.5, "No quality data yet\n(run `make bench-all`)",
-                ha="center", va="center", transform=ax.transAxes, fontsize=12, color="gray")
+        ax.text(
+            0.5,
+            0.5,
+            "No quality data yet\n(run `make bench-all`)",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=12,
+            color="gray",
+        )
     else:
         for model_id, group in sub.groupby("model_id"):
             front = pareto_front(group, "estimated_joules_per_query", "quality_score")
-            ax.plot(front["estimated_tokens_per_joule"], front["quality_score"],
-                    marker="o", label=model_id)
+            ax.plot(
+                front["estimated_tokens_per_joule"],
+                front["quality_score"],
+                marker="o",
+                label=model_id,
+            )
         ax.legend(fontsize=8)
     ax.set_xlabel("Tokens/joule (estimated, higher=better)")
     ax.set_ylabel("Quality Score")
@@ -125,8 +158,10 @@ def _plot_throughput_by_quant(df: pd.DataFrame, out_path: Path) -> None:
     x = np.arange(len(quants))
     width = 0.8 / max(len(models), 1)
     for i, model in enumerate(models):
-        vals = [sub[(sub["model_id"] == model) & (sub["quant_name"] == q)]["tps_median"].mean()
-                for q in quants]
+        vals = [
+            sub[(sub["model_id"] == model) & (sub["quant_name"] == q)]["tps_median"].mean()
+            for q in quants
+        ]
         ax.bar(x + i * width, vals, width, label=model)
     ax.set_xticks(x + width * len(models) / 2)
     ax.set_xticklabels(quants, rotation=30)
@@ -150,8 +185,16 @@ def _plot_quality_degradation(df: pd.DataFrame, out_path: Path) -> None:
     sub = df.dropna(subset=["quant_bits", "quality_score"])
     fig, ax = plt.subplots(figsize=(8, 5))
     if sub.empty:
-        ax.text(0.5, 0.5, "No quality data yet\n(run `make bench-all`)",
-                ha="center", va="center", transform=ax.transAxes, fontsize=12, color="gray")
+        ax.text(
+            0.5,
+            0.5,
+            "No quality data yet\n(run `make bench-all`)",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=12,
+            color="gray",
+        )
     else:
         # Per (model, task): normalize quality to that cell's Q8_0 score, then
         # average the retention across models at each quant level.
@@ -165,12 +208,12 @@ def _plot_quality_degradation(df: pd.DataFrame, out_path: Path) -> None:
                 rows.append((r["task_id"], r["quant_bits"], r["quality_score"] / ref))
         if rows:
             import pandas as _pd
+
             norm = _pd.DataFrame(rows, columns=["task_id", "quant_bits", "retention"])
             for task_id, group in norm.groupby("task_id"):
                 agg = group.groupby("quant_bits")["retention"].mean().reset_index()
                 agg = agg.sort_values("quant_bits")
-                ax.plot(agg["quant_bits"], agg["retention"], marker="o",
-                        label=str(task_id))
+                ax.plot(agg["quant_bits"], agg["retention"], marker="o", label=str(task_id))
             ax.axhline(1.0, color="gray", linestyle="--", linewidth=1, alpha=0.6)
             ax.legend(fontsize=8)
     ax.set_xlabel("Quantization Bits")
@@ -193,16 +236,26 @@ def _plot_mcu_comparison(df: pd.DataFrame, out_path: Path) -> None:
     # clustered points don't need per-point text labels (which overlap badly).
     llm_sub = df.dropna(subset=["model_params_b", "tps_median"])
     if not llm_sub.empty:
-        models = sorted(llm_sub["model_id"].unique(),
-                        key=lambda m: llm_sub[llm_sub["model_id"] == m]["model_params_b"].iloc[0])
+        models = sorted(
+            llm_sub["model_id"].unique(),
+            key=lambda m: llm_sub[llm_sub["model_id"] == m]["model_params_b"].iloc[0],
+        )
         cmap = plt.get_cmap("viridis")
         colors = {m: cmap(i / max(len(models) - 1, 1)) for i, m in enumerate(models)}
         for m in models:
             sub = llm_sub[llm_sub["model_id"] == m]
             short = m.split("-instruct")[0]
-            ax.scatter(sub["model_params_b"] * 1e9, 1000.0 / sub["tps_median"],
-                       marker="o", s=70, color=colors[m], edgecolor="white",
-                       linewidth=0.5, zorder=3, label=short)
+            ax.scatter(
+                sub["model_params_b"] * 1e9,
+                1000.0 / sub["tps_median"],
+                marker="o",
+                s=70,
+                color=colors[m],
+                edgecolor="white",
+                linewidth=0.5,
+                zorder=3,
+                label=short,
+            )
 
     # Cortex-M4 LSTM (isolated lower-left point: a single annotation is fine).
     if mcu_json.exists():
@@ -211,9 +264,17 @@ def _plot_mcu_comparison(df: pd.DataFrame, out_path: Path) -> None:
         mcu_latency_ms = mcu.get("latency_us", 139404) / 1000.0
         sim = mcu.get("simulation_method", "")
         tag = "Renode sim" if "renode" in sim else "ESTIMATED"
-        ax.scatter(mcu_params, mcu_latency_ms, marker="^", s=140, color="red",
-                   edgecolor="white", linewidth=0.5, zorder=4,
-                   label=f"LSTM-AE Cortex-M4 [{tag}]")
+        ax.scatter(
+            mcu_params,
+            mcu_latency_ms,
+            marker="^",
+            s=140,
+            color="red",
+            edgecolor="white",
+            linewidth=0.5,
+            zorder=4,
+            label=f"LSTM-AE Cortex-M4 [{tag}]",
+        )
 
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -221,8 +282,13 @@ def _plot_mcu_comparison(df: pd.DataFrame, out_path: Path) -> None:
     ax.set_ylabel("Latency: ms/token (LLMs) or ms/inference (LSTM), log scale")
     ax.set_title("Mac LLMs vs Cortex-M4 LSTM: Model Size vs Latency")
     ax.grid(True, which="both", linestyle="--", alpha=0.4)
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=8,
-              title="Model (each dot = one quant)", framealpha=0.9)
+    ax.legend(
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1.0),
+        fontsize=8,
+        title="Model (each dot = one quant)",
+        framealpha=0.9,
+    )
     fig.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -232,10 +298,18 @@ def _plot_mcu_comparison(df: pd.DataFrame, out_path: Path) -> None:
 # Results table + README update
 # ---------------------------------------------------------------------------
 
+
 def _build_results_table(df: pd.DataFrame) -> str:
-    cols = ["model_id", "quant_name", "quant_bits", "tps_median",
-            "tpot_ms_median", "peak_rss_mb", "quality_score",
-            "estimated_joules_per_query"]
+    cols = [
+        "model_id",
+        "quant_name",
+        "quant_bits",
+        "tps_median",
+        "tpot_ms_median",
+        "peak_rss_mb",
+        "quality_score",
+        "estimated_joules_per_query",
+    ]
     sub = df[[c for c in cols if c in df.columns]].copy()
     sub = sub.dropna(subset=["tps_median"])
 
@@ -256,8 +330,10 @@ def _build_results_table(df: pd.DataFrame) -> str:
         .sort_values("tps_median", ascending=False)
     )
 
-    header = ("| Model | Quant | Bits | tok/s (median) | TPOT (ms) "
-              "| Peak RAM (MB) | Quality Score | J/query (est.) |")
+    header = (
+        "| Model | Quant | Bits | tok/s (median) | TPOT (ms) "
+        "| Peak RAM (MB) | Quality Score | J/query (est.) |"
+    )
     sep = "|---|---|---|---|---|---|---|---|"
     lines = [header, sep]
 
@@ -275,8 +351,7 @@ def _build_results_table(df: pd.DataFrame) -> str:
             f"| {_fmt(row['estimated_joules_per_query'], '.2f')} |"
         )
     lines.append("")
-    lines.append("*Energy: ESTIMATED (analytical, Lai et al. 2018). "
-                 "Quality: mean across tasks.*")
+    lines.append("*Energy: ESTIMATED (analytical, Lai et al. 2018). Quality: mean across tasks.*")
     return "\n".join(lines)
 
 
@@ -287,13 +362,14 @@ def _update_readme_table(readme_path: Path, table_md: str) -> None:
     if _TABLE_START not in text or _TABLE_END not in text:
         return
     before = text[: text.index(_TABLE_START) + len(_TABLE_START)]
-    after = text[text.index(_TABLE_END):]
+    after = text[text.index(_TABLE_END) :]
     readme_path.write_text(f"{before}\n{table_md}\n{after}")
 
 
 # ---------------------------------------------------------------------------
 # HTML report
 # ---------------------------------------------------------------------------
+
 
 def _write_html(df: pd.DataFrame, out_path: Path, reports_dir: Path) -> None:
     plots = [
@@ -306,7 +382,7 @@ def _write_html(df: pd.DataFrame, out_path: Path, reports_dir: Path) -> None:
         ("operator_breakdown.png", "Operator-Level Breakdown (Phi-3.5-mini)"),
     ]
     imgs = "".join(
-        f"<h2>{title}</h2><img src=\"{name}\" style=\"max-width:100%;margin-bottom:2em\"><br>"
+        f'<h2>{title}</h2><img src="{name}" style="max-width:100%;margin-bottom:2em"><br>'
         for name, title in plots
         if (reports_dir / name).exists()
     )

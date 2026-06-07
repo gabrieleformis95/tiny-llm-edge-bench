@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.mcu.cmsis_nn_energy import count_lstm_macs, estimate_mcu_energy, MCUEnergyEstimate
+from src.mcu.cmsis_nn_energy import MCUEnergyEstimate, count_lstm_macs, estimate_mcu_energy
 
 
 def test_mac_count_positive():

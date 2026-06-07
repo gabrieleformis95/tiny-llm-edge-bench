@@ -4,6 +4,7 @@ Reloads each model that has an existing instruction_follow result, re-runs ONLY
 the quality benchmark (30 prompts) with the model's chat_template applied, and
 rewrites the `quality` field in place. Throughput/energy are preserved untouched.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,11 +13,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
+from src.benchmarks.quality import run_quality_benchmark
+from src.inference.llama_cpp_backend import LlamaCppBackend
 from src.registry.downloader import download_gguf
 from src.registry.models import get_model
 from src.registry.tasks import get_task
-from src.inference.llama_cpp_backend import LlamaCppBackend
-from src.benchmarks.quality import run_quality_benchmark
 from src.tasks.instruction_follow import InstructionFollowTask
 
 RESULTS = Path("results")

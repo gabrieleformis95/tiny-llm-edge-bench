@@ -9,7 +9,6 @@ Produces one results/quality_{task_id}.json per task.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -40,10 +39,15 @@ def _build_task(spec: TaskSpec, max_samples: int):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--gguf-path", required=True, type=Path)
-    parser.add_argument("--max-samples", type=int, default=10,
-                        help="Cap for MMLU (other tasks use their full dataset)")
-    parser.add_argument("--n-gpu-layers", type=int, default=0,
-                        help="GPU layers for llama.cpp (0=CPU)")
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=10,
+        help="Cap for MMLU (other tasks use their full dataset)",
+    )
+    parser.add_argument(
+        "--n-gpu-layers", type=int, default=0, help="GPU layers for llama.cpp (0=CPU)"
+    )
     args = parser.parse_args()
 
     if not args.gguf_path.exists():

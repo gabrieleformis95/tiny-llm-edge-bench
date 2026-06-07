@@ -77,6 +77,7 @@ def main() -> None:
     args = parser.parse_args()
 
     from src.config import settings
+
     out = args.output_dir or (settings.gguf_cache_dir / args.model / "AWQ-INT4")
     quantize(args.model, args.group_size, out)
 

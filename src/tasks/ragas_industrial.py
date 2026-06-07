@@ -13,8 +13,8 @@ import hashlib
 import json as _json
 import re
 import urllib.request
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from src.config import settings
 
@@ -24,6 +24,7 @@ _CACHE_PATH = Path("data/golden/judge_cache.json")
 # ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
+
 
 def _load_cache() -> dict:
     if _CACHE_PATH.exists():
@@ -56,18 +57,21 @@ def _set_call_interval(seconds: float) -> None:
 
 def _groq_call(messages: list[dict], max_tokens: int = 256) -> str:
     import time
+
     global _last_call_ts
     gap = time.time() - _last_call_ts
     if gap < _MIN_CALL_INTERVAL:
         time.sleep(_MIN_CALL_INTERVAL - gap)
     _last_call_ts = time.time()
 
-    payload = _json.dumps({
-        "model": "llama-3.3-70b-versatile",
-        "messages": messages,
-        "max_tokens": max_tokens,
-        "temperature": 0.0,
-    }).encode()
+    payload = _json.dumps(
+        {
+            "model": "llama-3.3-70b-versatile",
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.0,
+        }
+    ).encode()
     req = urllib.request.Request(
         "https://api.groq.com/openai/v1/chat/completions",
         data=payload,
@@ -78,7 +82,7 @@ def _groq_call(messages: list[dict], max_tokens: int = 256) -> str:
             "User-Agent": "tiny-llm-edge-bench/1.0",
         },
     )
-    import time
+
     for attempt in range(10):
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:
@@ -89,21 +93,23 @@ def _groq_call(messages: list[dict], max_tokens: int = 256) -> str:
             if e.code in (429, 500, 502, 503) and attempt < 9:
                 retry_after = e.headers.get("retry-after")
                 # Cap the wait: a daily-quota 429 can carry a retry-after of hours.
-                wait = min(float(retry_after), 60.0) if retry_after else min(2 ** attempt, 30)
+                wait = min(float(retry_after), 60.0) if retry_after else min(2**attempt, 30)
                 time.sleep(wait)
                 continue
             raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
             # Network/read timeouts are transient: retry with backoff.
             if attempt < 9:
-                time.sleep(min(2 ** attempt, 30))
+                time.sleep(min(2**attempt, 30))
                 continue
             raise
+    raise RuntimeError("Groq call failed after exhausting retries")
 
 
 # ---------------------------------------------------------------------------
 # RAGAS faithfulness judge
 # ---------------------------------------------------------------------------
+
 
 def _judge_faithfulness(answer: str, contexts: list[str]) -> float:
     """Fraction of atomic statements in answer supported by contexts.
@@ -111,20 +117,27 @@ def _judge_faithfulness(answer: str, contexts: list[str]) -> float:
     Two-step: decompose answer -> atomic statements, then verify each.
     Results are cached in data/golden/judge_cache.json.
     """
-    cache_key = hashlib.sha256(
-        (answer + "|||" + "|||".join(contexts)).encode()
-    ).hexdigest()
+    cache_key = hashlib.sha256((answer + "|||" + "|||".join(contexts)).encode()).hexdigest()
     cache = _load_cache()
     if cache_key in cache:
         return cache[cache_key]
 
-    ctx_block = "\n".join(f"[{i+1}] {c}" for i, c in enumerate(contexts))
+    ctx_block = "\n".join(f"[{i + 1}] {c}" for i, c in enumerate(contexts))
 
     # Step 1: decompose
-    raw = _groq_call([{"role": "user", "content": (
-        "Break the following answer into a numbered list of atomic factual statements. "
-        "One statement per line. No bullets, no explanation.\n\nAnswer: " + answer[:1000]
-    )}], max_tokens=300)
+    raw = _groq_call(
+        [
+            {
+                "role": "user",
+                "content": (
+                    "Break the following answer into a numbered list of atomic factual statements. "
+                    "One statement per line. No bullets, no explanation.\n\nAnswer: "
+                    + answer[:1000]
+                ),
+            }
+        ],
+        max_tokens=300,
+    )
 
     statements = []
     for line in raw.splitlines():
@@ -139,14 +152,22 @@ def _judge_faithfulness(answer: str, contexts: list[str]) -> float:
 
     # Step 2: verify all statements in a single batched call (stays under the
     # free-tier token/minute budget; one call per statement blows it on long answers).
-    numbered = "\n".join(f"{i+1}. {s}" for i, s in enumerate(statements))
-    verdict = _groq_call([{"role": "user", "content": (
-        f"Contexts:\n{ctx_block}\n\n"
-        f"Statements:\n{numbered}\n\n"
-        "For EACH numbered statement, decide if it is fully supported by the contexts "
-        "above. Reply with one line per statement in the form '<number>: SUPPORTED' or "
-        "'<number>: UNSUPPORTED'. No other text."
-    )}], max_tokens=20 * len(statements) + 50)
+    numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(statements))
+    verdict = _groq_call(
+        [
+            {
+                "role": "user",
+                "content": (
+                    f"Contexts:\n{ctx_block}\n\n"
+                    f"Statements:\n{numbered}\n\n"
+                    "For EACH numbered statement, decide if it is fully supported by the contexts "
+                    "above. Reply with one line per statement in the form '<number>: SUPPORTED' or "
+                    "'<number>: UNSUPPORTED'. No other text."
+                ),
+            }
+        ],
+        max_tokens=20 * len(statements) + 50,
+    )
 
     supported = 0
     for line in verdict.splitlines():
@@ -165,6 +186,7 @@ def _judge_faithfulness(answer: str, contexts: list[str]) -> float:
 # ---------------------------------------------------------------------------
 # ROUGE-L (kept as secondary diagnostic)
 # ---------------------------------------------------------------------------
+
 
 def _rouge_l_f1(prediction: str, reference: str) -> float:
     pred_tokens = prediction.lower().split()
@@ -190,6 +212,7 @@ def _rouge_l_f1(prediction: str, reference: str) -> float:
 # ---------------------------------------------------------------------------
 # Task
 # ---------------------------------------------------------------------------
+
 
 class RagasIndustrialTask:
     task_id = "ragas_industrial"
@@ -218,7 +241,7 @@ class RagasIndustrialTask:
 
     def build_prompt(self, sample: dict) -> str:
         context_block = "\n\n".join(
-            f"[Context {i+1}]: {c}" for i, c in enumerate(sample["contexts"])
+            f"[Context {i + 1}]: {c}" for i, c in enumerate(sample["contexts"])
         )
         return (
             "You are a helpful assistant. Answer the question using ONLY the provided context.\n\n"

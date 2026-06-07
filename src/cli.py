@@ -56,11 +56,14 @@ def list_tasks() -> None:
 
 @app.command()
 def fingerprint_cmd(
-    ambient_temp: float = typer.Option(None, "--ambient-temp", help="Ambient temperature in Celsius (optional)"),
+    ambient_temp: float = typer.Option(
+        None, "--ambient-temp", help="Ambient temperature in Celsius (optional)"
+    ),
 ) -> None:
     """Print hardware + software fingerprint for the current host."""
-    from src.registry.fingerprint import capture_fingerprint
     import json
+
+    from src.registry.fingerprint import capture_fingerprint
 
     fp = capture_fingerprint(ambient_temp_c=ambient_temp)
     console.print_json(json.dumps(fp.model_dump()))

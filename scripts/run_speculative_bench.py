@@ -31,9 +31,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
-from src.config import settings
 from src.registry.downloader import download_gguf
-
 
 # Standard prompt set for measurement (20-token median input)
 _PROMPTS = [
@@ -44,14 +42,16 @@ _PROMPTS = [
     "Explain quantization-aware training versus post-training quantization.",
 ]
 _N_WARMUP = 2
-_N_MEASURE = 5   # measured runs (one per prompt)
-_DRAFT_K = 4     # draft tokens per target pass
+_N_MEASURE = 5  # measured runs (one per prompt)
+_DRAFT_K = 4  # draft tokens per target pass
 
 
 def _argmax_logits(llm, n_vocab: int) -> int:
     """Return the argmax token from the last forward pass (temperature=0)."""
     import ctypes
+
     import llama_cpp.llama_cpp as lc
+
     logits_ptr = lc.llama_get_logits(llm._ctx.ctx)
     logits = np.frombuffer(
         (ctypes.c_float * n_vocab).from_address(ctypes.addressof(logits_ptr.contents)),
@@ -63,7 +63,9 @@ def _argmax_logits(llm, n_vocab: int) -> int:
 def _argmax_logits_ith(llm, pos: int, n_vocab: int) -> int:
     """Return argmax logits at batch position `pos` after a multi-token eval."""
     import ctypes
+
     import llama_cpp.llama_cpp as lc
+
     logits_ptr = lc.llama_get_logits_ith(llm._ctx.ctx, pos)
     logits = np.frombuffer(
         (ctypes.c_float * n_vocab).from_address(ctypes.addressof(logits_ptr.contents)),
@@ -80,7 +82,7 @@ def _load_model(model_id: str, quant_name: str, n_ctx: int = 512):
     llm = Llama(
         model_path=str(gguf_path),
         n_ctx=n_ctx,
-        n_gpu_layers=0,   # CPU only to avoid Metal crash on multi-model
+        n_gpu_layers=0,  # CPU only to avoid Metal crash on multi-model
         verbose=False,
         logits_all=False,  # logits_all=True shifts llama_get_logits to position 0, not last
     )
@@ -265,7 +267,7 @@ def main():
     print(f"Baseline:    {result['baseline_tps']:.2f} tok/s")
     print(f"Speculative: {result['speculative_tps']:.2f} tok/s")
     print(f"Speedup:     {result['speedup']:.3f}x")
-    print(f"Acceptance:  {result['acceptance_rate']*100:.1f}%")
+    print(f"Acceptance:  {result['acceptance_rate'] * 100:.1f}%")
 
 
 if __name__ == "__main__":

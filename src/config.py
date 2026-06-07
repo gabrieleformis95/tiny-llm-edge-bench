@@ -5,7 +5,6 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -38,22 +37,23 @@ class QuantSpec(BaseModel):
     name: str
     scheme: str = "gguf"  # "gguf" | "awq" | "gptq"
     bits: float
-    file_suffix: Optional[str] = None
+    file_suffix: str | None = None
     extra: dict = Field(default_factory=dict)
 
 
 class HardwareFingerprint(BaseModel):
     """Full hardware + software snapshot captured at the start of every run."""
+
     host_id: str
     family: str  # "apple_silicon" | "rpi" | "x86_linux" | "cortex_m4_simulated"
     cores: int
     ram_gb: float
-    cpu_freq_mhz: Optional[float] = None
-    cpu_governor: Optional[str] = None
+    cpu_freq_mhz: float | None = None
+    cpu_governor: str | None = None
     omp_threads: int
-    ac_powered: Optional[bool] = None
-    ambient_temp_c: Optional[float] = None
-    llama_cpp_sha: Optional[str] = None
+    ac_powered: bool | None = None
+    ambient_temp_c: float | None = None
+    llama_cpp_sha: str | None = None
     python_version: str
     os_release: str
 
@@ -80,17 +80,17 @@ class ThroughputResult(BaseModel):
     n_measured: int
     median_tok_per_s: float
     iqr_tok_per_s: float
-    std_tok_per_s: Optional[float] = None
+    std_tok_per_s: float | None = None
     min_tok_per_s: float
     max_tok_per_s: float
-    median_ttft_ms: Optional[float] = None
+    median_ttft_ms: float | None = None
     median_tpot_ms: float
     raw_samples: list[float]  # tok/s per measured run, for plot regeneration
 
 
 class MemoryResult(BaseModel):
     peak_rss_mb: float
-    peak_unified_mb: Optional[float] = None  # Apple Silicon only
+    peak_unified_mb: float | None = None  # Apple Silicon only
 
 
 class PowerResult(BaseModel):
@@ -101,13 +101,14 @@ class PowerResult(BaseModel):
 
 class EnergyResult(BaseModel):
     """At least one of measured / estimated must be populated."""
+
     # Measured via powermetrics with baseline subtraction (macOS only, sudo required)
-    measured_joules_per_query: Optional[float] = None
-    measured_tokens_per_joule: Optional[float] = None
+    measured_joules_per_query: float | None = None
+    measured_tokens_per_joule: float | None = None
     # Analytical estimate: MAC count × per-MAC energy (Lai et al. 2018)
-    estimated_joules_per_query: Optional[float] = None
-    estimated_tokens_per_joule: Optional[float] = None
-    estimation_method: Optional[str] = None  # "powermetrics_mac" | "cmsis_nn_lai2018"
+    estimated_joules_per_query: float | None = None
+    estimated_tokens_per_joule: float | None = None
+    estimation_method: str | None = None  # "powermetrics_mac" | "cmsis_nn_lai2018"
     notes: str = ""
 
 
@@ -125,9 +126,9 @@ class BenchmarkRun(BaseModel):
     quant: QuantSpec
     hardware: HardwareProfile
     fingerprint: HardwareFingerprint
-    task: Optional[TaskSpec] = None
+    task: TaskSpec | None = None
     throughput: ThroughputResult
     memory: MemoryResult
-    power: Optional[PowerResult] = None  # legacy; prefer energy
-    energy: Optional[EnergyResult] = None
-    quality: Optional[QualityResult] = None
+    power: PowerResult | None = None  # legacy; prefer energy
+    energy: EnergyResult | None = None
+    quality: QualityResult | None = None

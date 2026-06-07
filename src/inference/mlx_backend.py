@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from src.inference.base import GenerationResult, InferenceBackend
 
@@ -16,8 +15,8 @@ class MLXBackend(InferenceBackend):
     """
 
     def __init__(self) -> None:
-        self._model: Optional[object] = None
-        self._tokenizer: Optional[object] = None
+        self._model: object | None = None
+        self._tokenizer: object | None = None
 
     def load(
         self,
@@ -30,9 +29,7 @@ class MLXBackend(InferenceBackend):
         try:
             from mlx_lm import load as mlx_load  # type: ignore[import]
         except ImportError as e:
-            raise ImportError(
-                "mlx-lm not installed. Install with: pip install mlx-lm"
-            ) from e
+            raise ImportError("mlx-lm not installed. Install with: pip install mlx-lm") from e
 
         # gguf_path parent contains the model id used as HF repo
         hf_repo = str(gguf_path)
@@ -50,6 +47,7 @@ class MLXBackend(InferenceBackend):
             raise RuntimeError("Model not loaded.")
 
         import time
+
         try:
             from mlx_lm import generate as mlx_generate  # type: ignore[import]
         except ImportError as e:

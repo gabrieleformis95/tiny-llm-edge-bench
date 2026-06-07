@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import pytest
-from src.benchmarks.profiling import estimate_operator_breakdown, OperatorProfile
+
+from src.benchmarks.profiling import OperatorProfile, estimate_operator_breakdown
 
 
 def test_fracs_sum_to_one():
     p = estimate_operator_breakdown("phi-3.5-mini-instruct", 4.5, "Q4_K_M")
-    total = p.ffn_frac + p.attn_qkv_frac + p.attn_output_frac + p.attn_scores_frac + p.layernorm_frac
+    total = (
+        p.ffn_frac + p.attn_qkv_frac + p.attn_output_frac + p.attn_scores_frac + p.layernorm_frac
+    )
     assert abs(total - 1.0) < 1e-9
 
 

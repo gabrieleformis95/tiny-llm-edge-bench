@@ -18,20 +18,21 @@ import re
 import subprocess
 import threading
 import time
-from typing import Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 from src.config import EnergyResult, settings
 
 T = TypeVar("T")
 
-_SAMPLE_MS = 100      # powermetrics interval
-BASELINE_S = 30       # idle baseline window
+_SAMPLE_MS = 100  # powermetrics interval
+BASELINE_S = 30  # idle baseline window
 
 
 def measure_energy_mac(
     fn: Callable[[], T],
     tokens_generated: int,
-) -> tuple[T, Optional[EnergyResult]]:
+) -> tuple[T, EnergyResult | None]:
     """Run fn() under powermetrics with baseline subtraction.
 
     Returns (fn_result, EnergyResult | None).
@@ -44,6 +45,7 @@ def measure_energy_mac(
         return fn(), None
     if not _has_sudo():
         import warnings
+
         warnings.warn(
             "sudo unavailable - skipping power measurement. "
             "Run 'sudo -v' once before benchmarking to enable.",
@@ -59,9 +61,19 @@ def measure_energy_mac(
 
     def _pm_thread() -> None:
         proc = subprocess.Popen(
-            ["sudo", "powermetrics", "--samplers", "cpu_power,gpu_power",
-             "-i", str(_SAMPLE_MS), "-f", "plist"],
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            [
+                "sudo",
+                "powermetrics",
+                "--samplers",
+                "cpu_power,gpu_power",
+                "-i",
+                str(_SAMPLE_MS),
+                "-f",
+                "plist",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
         )
         assert proc.stdout is not None
         for line in proc.stdout:
@@ -113,9 +125,19 @@ def _measure_baseline() -> float:
 
     def _pm() -> None:
         proc = subprocess.Popen(
-            ["sudo", "powermetrics", "--samplers", "cpu_power,gpu_power",
-             "-i", str(_SAMPLE_MS), "-f", "plist"],
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            [
+                "sudo",
+                "powermetrics",
+                "--samplers",
+                "cpu_power,gpu_power",
+                "-i",
+                str(_SAMPLE_MS),
+                "-f",
+                "plist",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
         )
         assert proc.stdout is not None
         for line in proc.stdout:
@@ -135,7 +157,20 @@ def _measure_baseline() -> float:
 
 
 def _has_sudo() -> bool:
-    return subprocess.run(
-        ["sudo", "-n", "/usr/bin/powermetrics", "--samplers", "cpu_power", "-i", "100", "-n", "1"],
-        capture_output=True,
-    ).returncode == 0
+    return (
+        subprocess.run(
+            [
+                "sudo",
+                "-n",
+                "/usr/bin/powermetrics",
+                "--samplers",
+                "cpu_power",
+                "-i",
+                "100",
+                "-n",
+                "1",
+            ],
+            capture_output=True,
+        ).returncode
+        == 0
+    )

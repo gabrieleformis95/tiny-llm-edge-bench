@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from src.inference.base import GenerationResult, InferenceBackend
 
@@ -29,18 +29,24 @@ class AWQBackend(InferenceBackend):
     """
 
     def __init__(self) -> None:
-        self._model: Optional[object] = None
-        self._tokenizer: Optional[object] = None
-        self._model_path: Optional[str] = None
+        self._model: Any | None = None
+        self._tokenizer: Any | None = None
+        self._model_path: str | None = None
 
-    def load(self, gguf_path: Path, n_ctx: int = 2048, n_gpu_layers: int = -1) -> None:
+    def load(
+        self,
+        gguf_path: Path,
+        n_ctx: int = 2048,
+        n_gpu_layers: int = -1,
+        chat_template: str | None = None,
+    ) -> None:
         """Load an AWQ model from a local directory or HF repo id.
 
         gguf_path is reused as the model path / repo id for interface compatibility.
         For AWQ models this should point to the quantized directory, not a .gguf file.
         """
         try:
-            import torch
+            import torch  # noqa: F401  (availability check; re-imported where used)
             from awq import AutoAWQForCausalLM  # type: ignore[import]
             from transformers import AutoTokenizer  # type: ignore[import]
         except ImportError as exc:

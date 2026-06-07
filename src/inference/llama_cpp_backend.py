@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from src.inference.base import GenerationResult, InferenceBackend
 
@@ -17,16 +17,16 @@ class LlamaCppBackend(InferenceBackend):
     """
 
     def __init__(self) -> None:
-        self._model: Optional[object] = None  # llama_cpp.Llama at runtime
+        self._model: Any | None = None  # llama_cpp.Llama at runtime
         self._n_gpu_layers: int = -1
-        self._chat_template: Optional[str] = None
+        self._chat_template: str | None = None
 
     def load(
         self,
         gguf_path: Path,
         n_ctx: int = 2048,
         n_gpu_layers: int = -1,
-        chat_template: Optional[str] = None,
+        chat_template: str | None = None,
     ) -> None:
         """Load a GGUF model via llama-cpp-python."""
         try:
@@ -58,6 +58,7 @@ class LlamaCppBackend(InferenceBackend):
             raise RuntimeError("Model not loaded. Call load() first.")
 
         from src.inference.chat_templates import format_chat
+
         prompt = format_chat(prompt, self._chat_template)
 
         t0 = time.perf_counter()

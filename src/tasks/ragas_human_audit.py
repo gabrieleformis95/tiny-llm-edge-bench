@@ -23,7 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 sys.path.insert(0, str(ROOT))
 
-from src.tasks.ragas_industrial import RagasIndustrialTask, _rouge_l_f1
+from src.tasks.ragas_industrial import RagasIndustrialTask, _rouge_l_f1  # noqa: E402
 
 _GOLDEN = ROOT / "data/golden/ragas_golden.json"
 _PREDICTIONS_CACHE = ROOT / "data/golden/predicted_responses.json"
@@ -34,8 +34,9 @@ _MAX_NEW_TOKENS = 150
 
 
 def _generate_predictions(model_id: str, quant: str) -> list[dict]:
-    from src.registry.downloader import download_gguf
     from llama_cpp import Llama
+
+    from src.registry.downloader import download_gguf
 
     task = RagasIndustrialTask(_GOLDEN)
     samples = list(task.iter_samples())
@@ -51,18 +52,20 @@ def _generate_predictions(model_id: str, quant: str) -> list[dict]:
 
     results = []
     for i, sample in enumerate(samples):
-        print(f"  [{i+1}/{len(samples)}] {sample['question'][:70]}...")
+        print(f"  [{i + 1}/{len(samples)}] {sample['question'][:70]}...")
         prompt = task.build_prompt(sample)
         resp = llm(prompt, max_tokens=_MAX_NEW_TOKENS, temperature=0.0, echo=False)
-        prediction = resp["choices"][0]["text"].strip()
+        prediction = resp["choices"][0]["text"].strip()  # type: ignore[index]
         rouge_l = _rouge_l_f1(prediction, sample["reference"])
-        results.append({
-            "id": sample["id"],
-            "question": sample["question"],
-            "reference": sample["reference"],
-            "prediction": prediction,
-            "rouge_l": round(rouge_l, 4),
-        })
+        results.append(
+            {
+                "id": sample["id"],
+                "question": sample["question"],
+                "reference": sample["reference"],
+                "prediction": prediction,
+                "rouge_l": round(rouge_l, 4),
+            }
+        )
         print(f"         ROUGE-L: {rouge_l:.3f}")
 
     del llm
@@ -79,7 +82,7 @@ def _rating_session(predictions: list[dict]) -> list[dict]:
 
     rated = []
     for i, p in enumerate(predictions):
-        print(f"\n--- Example {i+1}/{len(predictions)} ---")
+        print(f"\n--- Example {i + 1}/{len(predictions)} ---")
         print(f"Question : {p['question']}")
         print(f"\nReference: {p['reference'][:350]}")
         print(f"\nPredicted: {p['prediction'][:400]}")
@@ -105,6 +108,7 @@ def _rating_session(predictions: list[dict]) -> list[dict]:
 
 def _spearman(rated: list[dict]) -> float:
     from scipy.stats import spearmanr
+
     human = [r["human_rating"] for r in rated]
     auto = [r["rouge_l"] for r in rated]
     r, _ = spearmanr(human, auto)
@@ -115,10 +119,12 @@ def main() -> float | None:
     parser = argparse.ArgumentParser(description="Human audit of RAGAS judge")
     parser.add_argument("--model", default=_DEFAULT_MODEL)
     parser.add_argument("--quant", default=_DEFAULT_QUANT)
-    parser.add_argument("--skip-generate", action="store_true",
-                        help="Skip inference; load predictions from cache")
-    parser.add_argument("--skip-rate", action="store_true",
-                        help="Generate predictions only, do not rate")
+    parser.add_argument(
+        "--skip-generate", action="store_true", help="Skip inference; load predictions from cache"
+    )
+    parser.add_argument(
+        "--skip-rate", action="store_true", help="Generate predictions only, do not rate"
+    )
     args = parser.parse_args()
 
     # --- Step 1: predictions ---

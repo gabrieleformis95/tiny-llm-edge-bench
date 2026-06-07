@@ -41,5 +41,3 @@ def get_quant(quant_name: str) -> QuantSpec:
         if q.name == quant_name:
             return q
     raise KeyError(f"Quant not found in registry: {quant_name!r}")
-
-

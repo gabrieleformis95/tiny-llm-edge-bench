@@ -20,22 +20,22 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
 class OperatorProfile:
     """Per-operator time fractions (sum to ~1.0). All values are ESTIMATED."""
+
     model_id: str
     quant_name: str
     quant_bits: float
     seq_len: int
-    ffn_frac: float            # gate+up+down weight projections (SwiGLU)
-    attn_qkv_frac: float       # QKV weight projections
-    attn_output_frac: float    # attention output weight projection
-    attn_scores_frac: float    # QK^T scores + softmax + V weighted sum (KV cache reads)
-    layernorm_frac: float      # all layer norms (FP32, minor)
-    total_ms_per_token: Optional[float] = None  # anchor from llama_perf_context
+    ffn_frac: float  # gate+up+down weight projections (SwiGLU)
+    attn_qkv_frac: float  # QKV weight projections
+    attn_output_frac: float  # attention output weight projection
+    attn_scores_frac: float  # QK^T scores + softmax + V weighted sum (KV cache reads)
+    layernorm_frac: float  # all layer norms (FP32, minor)
+    total_ms_per_token: float | None = None  # anchor from llama_perf_context
     method: str = "bandwidth_analytical"
     notes: str = ""
 
@@ -47,20 +47,32 @@ class OperatorProfile:
 # Sources: official model cards and config.json on HuggingFace
 _MODEL_ARCH: dict[str, dict] = {
     "phi-3.5-mini-instruct": {
-        "n_layers": 32, "d_model": 3072, "d_ffn": 8192,
-        "n_heads": 32, "n_kv_heads": 32,
+        "n_layers": 32,
+        "d_model": 3072,
+        "d_ffn": 8192,
+        "n_heads": 32,
+        "n_kv_heads": 32,
     },
     "qwen2.5-0.5b-instruct": {
-        "n_layers": 24, "d_model": 896, "d_ffn": 4864,
-        "n_heads": 14, "n_kv_heads": 2,
+        "n_layers": 24,
+        "d_model": 896,
+        "d_ffn": 4864,
+        "n_heads": 14,
+        "n_kv_heads": 2,
     },
     "llama-3.2-1b-instruct": {
-        "n_layers": 16, "d_model": 2048, "d_ffn": 8192,
-        "n_heads": 32, "n_kv_heads": 8,
+        "n_layers": 16,
+        "d_model": 2048,
+        "d_ffn": 8192,
+        "n_heads": 32,
+        "n_kv_heads": 8,
     },
     "qwen2.5-3b-instruct": {
-        "n_layers": 36, "d_model": 2048, "d_ffn": 11008,
-        "n_heads": 16, "n_kv_heads": 8,
+        "n_layers": 36,
+        "d_model": 2048,
+        "d_ffn": 11008,
+        "n_heads": 16,
+        "n_kv_heads": 8,
     },
 }
 
@@ -70,7 +82,7 @@ def estimate_operator_breakdown(
     quant_bits: float,
     quant_name: str = "",
     seq_len: int = 256,
-    measured_ms_per_token: Optional[float] = None,
+    measured_ms_per_token: float | None = None,
 ) -> OperatorProfile:
     """Estimate per-operator decode time breakdown from memory bandwidth model.
 
@@ -93,7 +105,7 @@ def estimate_operator_breakdown(
     head_dim: int = d_model // n_heads
 
     bpw = quant_bits / 8  # bytes per weight param after quantization
-    bpa = 2.0             # FP16 bytes per activation element (unchanged by quantization)
+    bpa = 2.0  # FP16 bytes per activation element (unchanged by quantization)
 
     # Weight-bound ops: benefit from quantization
     # Q, K, V projections: output dims = n_heads*head_dim, n_kv_heads*head_dim each
@@ -136,16 +148,17 @@ def estimate_operator_breakdown(
 def plot_operator_breakdown(profiles: list[OperatorProfile], out_path: Path) -> None:
     """Save stacked bar plot: % decode time per operator for each (model, quant) combo."""
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
 
     operator_keys = [
         ("FFN (gate+up+down)", "ffn_frac", "#2563eb"),
-        ("Attn QKV proj",      "attn_qkv_frac", "#16a34a"),
-        ("Attn output proj",   "attn_output_frac", "#ca8a04"),
-        ("Attn scores+softmax","attn_scores_frac", "#dc2626"),
-        ("LayerNorm",          "layernorm_frac", "#9333ea"),
+        ("Attn QKV proj", "attn_qkv_frac", "#16a34a"),
+        ("Attn output proj", "attn_output_frac", "#ca8a04"),
+        ("Attn scores+softmax", "attn_scores_frac", "#dc2626"),
+        ("LayerNorm", "layernorm_frac", "#9333ea"),
     ]
 
     x = np.arange(len(profiles))
@@ -157,12 +170,17 @@ def plot_operator_breakdown(profiles: list[OperatorProfile], out_path: Path) -> 
     for name, attr, color in operator_keys:
         vals = np.array([getattr(p, attr) * 100 for p in profiles])
         ax.bar(x, vals, bottom=bottoms, label=name, color=color, width=0.5, alpha=0.9)
-        for i, (v, b) in enumerate(zip(vals, bottoms)):
+        for i, (v, b) in enumerate(zip(vals, bottoms, strict=True)):
             if v > 2.5:
                 ax.text(
-                    x[i], b + v / 2, f"{v:.1f}%",
-                    ha="center", va="center", fontsize=8.5,
-                    color="white", fontweight="bold",
+                    x[i],
+                    b + v / 2,
+                    f"{v:.1f}%",
+                    ha="center",
+                    va="center",
+                    fontsize=8.5,
+                    color="white",
+                    fontweight="bold",
                 )
         bottoms += vals
 
@@ -176,16 +194,21 @@ def plot_operator_breakdown(profiles: list[OperatorProfile], out_path: Path) -> 
         fontsize=10,
     )
     # Legend outside the plot area so it never overlaps the bars.
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=8,
-              framealpha=0.9, title="Operator")
+    ax.legend(
+        loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=8, framealpha=0.9, title="Operator"
+    )
     ax.set_ylim(0, 105)
     ax.set_yticks([])
 
     ax.text(
-        0.5, -0.10,
+        0.5,
+        -0.10,
         "ESTIMATED (analytical). llama.cpp does not expose per-operator timings.",
-        transform=ax.transAxes, ha="center", fontsize=7,
-        style="italic", color="#6b7280",
+        transform=ax.transAxes,
+        ha="center",
+        fontsize=7,
+        style="italic",
+        color="#6b7280",
     )
 
     plt.tight_layout()
@@ -195,9 +218,10 @@ def plot_operator_breakdown(profiles: list[OperatorProfile], out_path: Path) -> 
     print(f"Saved: {out_path}")
 
 
-def _load_measured_tps_from_results(model_id: str, quant_name: str) -> Optional[float]:
+def _load_measured_tps_from_results(model_id: str, quant_name: str) -> float | None:
     """Scan results/*.json for a matching run and return measured tok/s."""
     import json
+
     from src.config import settings
 
     for f in settings.results_dir.glob("*.json"):
@@ -227,19 +251,23 @@ if __name__ == "__main__":
     profiles = [
         estimate_operator_breakdown(model_id, 16.0, "FP16", seq_len=seq_len),
         estimate_operator_breakdown(
-            model_id, 4.5, "Q4_K_M", seq_len=seq_len,
+            model_id,
+            4.5,
+            "Q4_K_M",
+            seq_len=seq_len,
             measured_ms_per_token=measured_ms,
         ),
     ]
 
     from pathlib import Path
+
     out = Path("reports/operator_breakdown.png")
     plot_operator_breakdown(profiles, out)
 
     for p in profiles:
         print(
-            f"{p.quant_name}: FFN={p.ffn_frac*100:.1f}%  "
-            f"Attn_scores={p.attn_scores_frac*100:.1f}%  "
-            f"QKV={p.attn_qkv_frac*100:.1f}%  "
-            f"Out={p.attn_output_frac*100:.1f}%"
+            f"{p.quant_name}: FFN={p.ffn_frac * 100:.1f}%  "
+            f"Attn_scores={p.attn_scores_frac * 100:.1f}%  "
+            f"QKV={p.attn_qkv_frac * 100:.1f}%  "
+            f"Out={p.attn_output_frac * 100:.1f}%"
         )

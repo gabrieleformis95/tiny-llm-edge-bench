@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from src.registry.models import load_models, load_quants, get_model, get_quant
-from src.registry.tasks import load_tasks, get_task
 from src.registry.hardware import detect_hardware, load_profiles
+from src.registry.models import get_model, get_quant, load_models, load_quants
+from src.registry.tasks import get_task, load_tasks
 
 
 def test_load_models_returns_list():

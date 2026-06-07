@@ -50,7 +50,7 @@ def estimate_energy_analytical(
         estimation_method="cmsis_nn_lai2018",
         notes=(
             f"ESTIMATED (analytical). "
-            f"MACs/token = 2 × {params_b}B = {2*params_b:.1f}B; "
+            f"MACs/token = 2 × {params_b}B = {2 * params_b:.1f}B; "
             f"n_tokens = {n_tokens}; "
             f"pJ/MAC = {pj_per_mac} (Lai et al. 2018, Cortex-A57). "
             "Excludes DRAM access energy (~65 pJ/8-byte read) - "

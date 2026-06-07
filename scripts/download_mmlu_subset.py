@@ -37,8 +37,8 @@ CHOICES_LABELS = ["A", "B", "C", "D"]
 def main() -> None:
     try:
         from datasets import load_dataset  # type: ignore[import]
-    except ImportError:
-        raise ImportError('pip install "tiny-llm-edge-bench[data]"')
+    except ImportError as exc:
+        raise ImportError('pip install "tiny-llm-edge-bench[data]"') from exc
 
     rows: list[dict] = []
     rng = random.Random(42)
@@ -48,13 +48,15 @@ def main() -> None:
         items = list(ds)
         sample = rng.sample(items, min(N_PER_SUBJECT, len(items)))
         for i, item in enumerate(sample):
-            rows.append({
-                "id": f"{subject}_{i:03d}",
-                "question": item["question"],
-                "choices": item["choices"],
-                "answer": CHOICES_LABELS[item["answer"]],
-                "subject": subject,
-            })
+            rows.append(
+                {
+                    "id": f"{subject}_{i:03d}",
+                    "question": item["question"],
+                    "choices": item["choices"],
+                    "answer": CHOICES_LABELS[item["answer"]],
+                    "subject": subject,
+                }
+            )
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(rows, indent=2, ensure_ascii=False))

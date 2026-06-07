@@ -18,15 +18,13 @@ from __future__ import annotations
 
 import json
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
 # P1 project root (sibling of tiny-llm-edge-bench inside ProgettoGit/)
-_TINY_ROOT = Path(__file__).parents[2]   # .../tiny-llm-edge-bench
+_TINY_ROOT = Path(__file__).parents[2]  # .../tiny-llm-edge-bench
 P1_ROOT = _TINY_ROOT.parent / "predictive-maintenance-copilot"
 P1_PYTHON = P1_ROOT / ".venv" / "bin" / "python"
 P1_CHECKPOINT = P1_ROOT / "checkpoints" / "autoencoder_FD001.pt"
@@ -129,11 +127,12 @@ print(f"weights_saved=True n_features={meta['n_features']} "
 
 def _extract_weights(
     n_synthetic: int = 50,
-) -> tuple[dict, dict, np.ndarray, np.ndarray, Optional[np.ndarray]]:
+) -> tuple[dict, dict, np.ndarray, np.ndarray, np.ndarray | None, np.ndarray | None, float | None]:
     """Run step 1 in P1's Python environment.
 
-    Returns (weights, meta, x_synthetic, y_pt, cal_windows).
+    Returns (weights, meta, x_synthetic, y_pt, cal_windows, calwin, calrecon).
     cal_windows: real FD001 calibration windows (None if load failed).
+    calwin/calrecon: first FD001 window + its PyTorch reconstruction error.
     """
     if not P1_PYTHON.exists():
         raise RuntimeError(f"P1 Python not found: {P1_PYTHON}")
@@ -147,9 +146,18 @@ def _extract_weights(
         meta_path = str(Path(tmpdir) / "meta.json")
 
         result = subprocess.run(
-            [str(P1_PYTHON), str(script_path),
-             str(P1_CHECKPOINT), npz_path, meta_path, str(n_synthetic), str(P1_ROOT)],
-            capture_output=True, text=True, timeout=120
+            [
+                str(P1_PYTHON),
+                str(script_path),
+                str(P1_CHECKPOINT),
+                npz_path,
+                meta_path,
+                str(n_synthetic),
+                str(P1_ROOT),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         if result.returncode != 0:
             raise RuntimeError(f"Weight extraction failed:\n{result.stderr}")
@@ -172,6 +180,7 @@ def _extract_weights(
 
 # ---- Step 2: build TF Keras model and copy weights ----
 
+
 def _reorder_gates(arr: np.ndarray, hidden_dim: int) -> np.ndarray:
     """Gate reordering: Keras 3 LSTM uses [i,f,g,o] — same as PyTorch.
 
@@ -180,8 +189,9 @@ def _reorder_gates(arr: np.ndarray, hidden_dim: int) -> np.ndarray:
     return arr  # identity: gate order identical in Keras 3 and PyTorch
 
 
-def _build_keras_model(n_features: int, window_size: int, hidden_dim: int,
-                       latent_dim: int, num_layers: int = 1):
+def _build_keras_model(
+    n_features: int, window_size: int, hidden_dim: int, latent_dim: int, num_layers: int = 1
+):
     """Subclassed Keras model equivalent to P1's LSTMAutoencoder.
 
     Using Model subclass instead of Functional API to avoid Keras 3
@@ -196,8 +206,7 @@ def _build_keras_model(n_features: int, window_size: int, hidden_dim: int,
         def __init__(self):
             super().__init__(name="lstm_autoencoder")
             self.encoder_lstm = tf.keras.layers.LSTM(
-                hidden_dim, return_sequences=False, return_state=True,
-                name="encoder_lstm"
+                hidden_dim, return_sequences=False, return_state=True, name="encoder_lstm"
             )
             self.to_latent = tf.keras.layers.Dense(latent_dim, name="to_latent")
             self.latent_to_h = tf.keras.layers.Dense(hidden_dim, name="latent_to_h")
@@ -214,8 +223,7 @@ def _build_keras_model(n_features: int, window_size: int, hidden_dim: int,
             dec_c = self.latent_to_c(latent, training=training)
             # Static shape batch=1: required by TFLite UNIDIRECTIONAL_SEQUENCE_LSTM
             zeros = tf.zeros([1, window_size_, n_features_], dtype=tf.float32)
-            decoded = self.decoder_lstm(zeros, initial_state=[dec_h, dec_c],
-                                        training=training)
+            decoded = self.decoder_lstm(zeros, initial_state=[dec_h, dec_c], training=training)
             return self.output_layer(decoded, training=training)
 
     model = LSTMAutoencoderKeras()
@@ -224,8 +232,9 @@ def _build_keras_model(n_features: int, window_size: int, hidden_dim: int,
     return model, enc_lstm, dec_lstm
 
 
-def _copy_lstm_weights(tf_layer, wih: np.ndarray, whh: np.ndarray,
-                       bih: np.ndarray, bhh: np.ndarray, hidden_dim: int) -> None:
+def _copy_lstm_weights(
+    tf_layer, wih: np.ndarray, whh: np.ndarray, bih: np.ndarray, bhh: np.ndarray, hidden_dim: int
+) -> None:
     """Copy and reorder PyTorch LSTM weights to TF Keras LSTM layer.
 
     TF Keras LSTM weights: [kernel, recurrent_kernel, bias]
@@ -274,33 +283,38 @@ def build_and_copy(weights: dict, meta: dict, dummy_x: np.ndarray):
         weights["decoder.bias_hh_l0"],
         hidden_dim,
     )
-    _set_dense_weights(keras_model, "to_latent",
-                       weights["to_latent.weight"], weights["to_latent.bias"])
-    _set_dense_weights(keras_model, "latent_to_h",
-                       weights["latent_to_h.weight"], weights["latent_to_h.bias"])
-    _set_dense_weights(keras_model, "latent_to_c",
-                       weights["latent_to_c.weight"], weights["latent_to_c.bias"])
-    _set_dense_weights(keras_model, "output_layer",
-                       weights["output_layer.weight"], weights["output_layer.bias"])
+    _set_dense_weights(
+        keras_model, "to_latent", weights["to_latent.weight"], weights["to_latent.bias"]
+    )
+    _set_dense_weights(
+        keras_model, "latent_to_h", weights["latent_to_h.weight"], weights["latent_to_h.bias"]
+    )
+    _set_dense_weights(
+        keras_model, "latent_to_c", weights["latent_to_c.weight"], weights["latent_to_c.bias"]
+    )
+    _set_dense_weights(
+        keras_model, "output_layer", weights["output_layer.weight"], weights["output_layer.bias"]
+    )
 
     return keras_model
 
 
 # ---- Step 3: verify and convert ----
 
-def _verify_fp32(keras_model, x_np: np.ndarray, y_pt: np.ndarray,
-                 tolerance: float = 0.05) -> float:
+
+def _verify_fp32(keras_model, x_np: np.ndarray, y_pt: np.ndarray, tolerance: float = 0.05) -> float:
     y_tf = keras_model.predict(x_np, verbose=0)
     mse = float(np.mean((y_pt - y_tf) ** 2))
-    ref = float(np.mean(y_pt ** 2)) + 1e-12
+    ref = float(np.mean(y_pt**2)) + 1e-12
     rel = mse / ref
     print(f"[verify FP32] TF vs PyTorch relative MSE: {rel:.6f} (tol {tolerance})")
     assert rel < tolerance, f"FP32 delta {rel:.4f} > {tolerance}"
     return rel
 
 
-def _build_pure_tf_fn(weights: dict, n_features: int, window_size: int,
-                      hidden_dim: int, latent_dim: int) -> "tf.types.experimental.ConcreteFunction":
+def _build_pure_tf_fn(
+    weights: dict, n_features: int, window_size: int, hidden_dim: int, latent_dim: int
+):  # returns a tf ConcreteFunction (tf imported lazily inside)
     """Build a pure unrolled TF inference function (no Keras layers, no variables, no WHILE ops).
 
     All weights are embedded as tf.constant. Unrolled for-loop replaces WHILE op.
@@ -311,31 +325,41 @@ def _build_pure_tf_fn(weights: dict, n_features: int, window_size: int,
     def _make_c(key: str) -> tf.Tensor:
         return tf.constant(weights[key].astype(np.float32))
 
-    enc_wih = _make_c("encoder.weight_ih_l0").numpy().T   # [n_features, 4h]
-    enc_whh = _make_c("encoder.weight_hh_l0").numpy().T   # [h, 4h]
-    enc_b   = (_make_c("encoder.bias_ih_l0") + _make_c("encoder.bias_hh_l0")).numpy()
+    enc_wih = _make_c("encoder.weight_ih_l0").numpy().T  # [n_features, 4h]
+    enc_whh = _make_c("encoder.weight_hh_l0").numpy().T  # [h, 4h]
+    enc_b = (_make_c("encoder.bias_ih_l0") + _make_c("encoder.bias_hh_l0")).numpy()
 
-    dec_wih = _make_c("decoder.weight_ih_l0").numpy().T   # [n_features, 4h]
-    dec_whh = _make_c("decoder.weight_hh_l0").numpy().T   # [h, 4h]
-    dec_b   = (_make_c("decoder.bias_ih_l0") + _make_c("decoder.bias_hh_l0")).numpy()
+    dec_wih = _make_c("decoder.weight_ih_l0").numpy().T  # [n_features, 4h]
+    dec_whh = _make_c("decoder.weight_hh_l0").numpy().T  # [h, 4h]
+    dec_b = (_make_c("decoder.bias_ih_l0") + _make_c("decoder.bias_hh_l0")).numpy()
 
-    w_lat = _make_c("to_latent.weight").numpy().T    # [h, latent]
+    w_lat = _make_c("to_latent.weight").numpy().T  # [h, latent]
     b_lat = _make_c("to_latent.bias").numpy()
-    w_h = _make_c("latent_to_h.weight").numpy().T   # [latent, h]
+    w_h = _make_c("latent_to_h.weight").numpy().T  # [latent, h]
     b_h = _make_c("latent_to_h.bias").numpy()
-    w_c = _make_c("latent_to_c.weight").numpy().T   # [latent, h]
+    w_c = _make_c("latent_to_c.weight").numpy().T  # [latent, h]
     b_c = _make_c("latent_to_c.bias").numpy()
     w_out = _make_c("output_layer.weight").numpy().T  # [h, n_features]
     b_out = _make_c("output_layer.bias").numpy()
 
-    enc_wih_c = tf.constant(enc_wih); enc_whh_c = tf.constant(enc_whh); enc_b_c = tf.constant(enc_b)
-    dec_wih_c = tf.constant(dec_wih); dec_whh_c = tf.constant(dec_whh); dec_b_c = tf.constant(dec_b)
-    w_lat_c = tf.constant(w_lat); b_lat_c = tf.constant(b_lat)
-    w_h_c = tf.constant(w_h); b_h_c = tf.constant(b_h)
-    w_c_c = tf.constant(w_c); b_c_c = tf.constant(b_c)
-    w_out_c = tf.constant(w_out); b_out_c = tf.constant(b_out)
+    enc_wih_c = tf.constant(enc_wih)
+    enc_whh_c = tf.constant(enc_whh)
+    enc_b_c = tf.constant(enc_b)
+    dec_wih_c = tf.constant(dec_wih)
+    dec_whh_c = tf.constant(dec_whh)
+    dec_b_c = tf.constant(dec_b)
+    w_lat_c = tf.constant(w_lat)
+    b_lat_c = tf.constant(b_lat)
+    w_h_c = tf.constant(w_h)
+    b_h_c = tf.constant(b_h)
+    w_c_c = tf.constant(w_c)
+    b_c_c = tf.constant(b_c)
+    w_out_c = tf.constant(w_out)
+    b_out_c = tf.constant(b_out)
 
-    @tf.function(input_signature=[tf.TensorSpec(shape=[1, window_size, n_features], dtype=tf.float32)])
+    @tf.function(
+        input_signature=[tf.TensorSpec(shape=[1, window_size, n_features], dtype=tf.float32)]
+    )
     def inference_fn(x):
         # Encoder LSTM (unrolled, batch=1)
         h = tf.zeros([1, hidden_dim], dtype=tf.float32)
@@ -369,9 +393,13 @@ def _build_pure_tf_fn(weights: dict, n_features: int, window_size: int,
     return inference_fn.get_concrete_function()
 
 
-def _convert_tflite_int8(keras_model, n_features: int, window_size: int,
-                         weights: dict = None,
-                         cal_windows: Optional[np.ndarray] = None) -> bytes:
+def _convert_tflite_int8(
+    keras_model,
+    n_features: int,
+    window_size: int,
+    weights: dict,
+    cal_windows: np.ndarray | None = None,
+) -> bytes:
     """Convert to TFLite with dynamic range quantization (INT8 weights, float32 activations).
 
     Full INT8 activation quantization accumulates error across 30 unrolled LSTM steps,
@@ -394,8 +422,9 @@ def _convert_tflite_int8(keras_model, n_features: int, window_size: int,
     return conv.convert()
 
 
-def _verify_int8(tflite_bytes: bytes, keras_model, n_features: int,
-                 window_size: int, tolerance: float = 0.05) -> float:
+def _verify_int8(
+    tflite_bytes: bytes, keras_model, n_features: int, window_size: int, tolerance: float = 0.05
+) -> float:
     """Verify TFLite model vs Keras FP32 within tolerance.
 
     Handles both dynamic range (float32 I/O) and full INT8 (int8 I/O) models.
@@ -416,9 +445,9 @@ def _verify_int8(tflite_bytes: bytes, keras_model, n_features: int,
     for i in range(len(x)):
         if ind["dtype"] == np.int8:
             s_in, zp_in = ind["quantization"]
-            x_in = np.clip(np.round(x[i:i+1] / s_in + zp_in), -128, 127).astype(np.int8)
+            x_in = np.clip(np.round(x[i : i + 1] / s_in + zp_in), -128, 127).astype(np.int8)
         else:
-            x_in = x[i:i+1]
+            x_in = x[i : i + 1]
         interp.set_tensor(ind["index"], x_in)
         interp.invoke()
         y_out = interp.get_tensor(outd["index"]).astype(np.float32)
@@ -427,7 +456,7 @@ def _verify_int8(tflite_bytes: bytes, keras_model, n_features: int,
             y_out = (y_out - zp_out) * s_out
         mse_list.append(float(np.mean((y_fp32[i] - y_out) ** 2)))
 
-    rel = float(np.mean(mse_list)) / (float(np.mean(y_fp32 ** 2)) + 1e-12)
+    rel = float(np.mean(mse_list)) / (float(np.mean(y_fp32**2)) + 1e-12)
     print(f"[verify quant] TFLite vs FP32 relative MSE: {rel:.6f} (tol {tolerance})")
     if rel >= tolerance:
         print(f"  WARNING: MSE delta {rel:.4f} exceeds tolerance {tolerance}.")
@@ -447,22 +476,26 @@ def _gen_model_data_cc(tflite_bytes: bytes, out: Path) -> None:
     ]
     hex_vals = [f"0x{b:02x}" for b in tflite_bytes]
     for i in range(0, len(hex_vals), 12):
-        chunk = ", ".join(hex_vals[i:i+12])
+        chunk = ", ".join(hex_vals[i : i + 12])
         lines.append(f"  {chunk},")
     lines[-1] = lines[-1].rstrip(",")
     lines.append("};")
     out.write_text("\n".join(lines) + "\n")
 
 
-def _gen_weights_header(weights: dict, meta: dict, calwin: np.ndarray,
-                        calrecon: float, out: Path) -> None:
+def _gen_weights_header(
+    weights: dict, meta: dict, calwin: np.ndarray, calrecon: float, out: Path
+) -> None:
     """Emit model_weights.h: FP32 weights + one real FD001 window for the C firmware.
 
     The firmware (src/mcu/firmware/main.c) runs a real FP32 forward pass from these
     arrays; Renode then measures the executed-instruction count. Biases are combined
     (bias_ih + bias_hh). LSTM gate row layout [i,f,g,o] x HID is preserved.
     """
-    H = meta["hidden_dim"]; F = meta["n_features"]; L = meta["latent_dim"]; T = meta["window_size"]
+    H = meta["hidden_dim"]
+    F = meta["n_features"]
+    L = meta["latent_dim"]
+    T = meta["window_size"]
     enc_b = (weights["encoder.bias_ih_l0"] + weights["encoder.bias_hh_l0"]).astype(np.float32)
     dec_b = (weights["decoder.bias_ih_l0"] + weights["decoder.bias_hh_l0"]).astype(np.float32)
 
@@ -470,7 +503,7 @@ def _gen_weights_header(weights: dict, meta: dict, calwin: np.ndarray,
         a = arr.flatten().astype(np.float32)
         lines = [f"static const float {name}[{a.size}] = {{"]
         for i in range(0, a.size, 8):
-            lines.append("  " + ", ".join(f"{v:.8e}f" for v in a[i:i + 8]) + ",")
+            lines.append("  " + ", ".join(f"{v:.8e}f" for v in a[i : i + 8]) + ",")
         lines.append("};")
         return "\n".join(lines)
 
@@ -492,10 +525,14 @@ def _gen_weights_header(weights: dict, meta: dict, calwin: np.ndarray,
         carr("dec_wih", weights["decoder.weight_ih_l0"]),
         carr("dec_whh", weights["decoder.weight_hh_l0"]),
         carr("dec_b", dec_b),
-        carr("w_lat", weights["to_latent.weight"]), carr("b_lat", weights["to_latent.bias"]),
-        carr("w_h", weights["latent_to_h.weight"]), carr("b_h", weights["latent_to_h.bias"]),
-        carr("w_c", weights["latent_to_c.weight"]), carr("b_c", weights["latent_to_c.bias"]),
-        carr("w_out", weights["output_layer.weight"]), carr("b_out", weights["output_layer.bias"]),
+        carr("w_lat", weights["to_latent.weight"]),
+        carr("b_lat", weights["to_latent.bias"]),
+        carr("w_h", weights["latent_to_h.weight"]),
+        carr("b_h", weights["latent_to_h.bias"]),
+        carr("w_c", weights["latent_to_c.weight"]),
+        carr("b_c", weights["latent_to_c.bias"]),
+        carr("w_out", weights["output_layer.weight"]),
+        carr("b_out", weights["output_layer.bias"]),
         carr("input_window", calwin),
     ]
     out.write_text("\n".join(body) + "\n")
@@ -515,6 +552,7 @@ def _gen_model_data_h(n_features: int, window_size: int, out: Path) -> None:
 
 # ---- Top-level export function ----
 
+
 def export(
     ckpt_path: Path = P1_CHECKPOINT,
     tflite_out: Path = TFLITE_OUT,
@@ -527,23 +565,28 @@ def export(
     weights, meta, x_np, y_pt, cal_windows, calwin, calrecon = _extract_weights(n_synthetic)
 
     if calwin is not None and calrecon is not None:
-        _gen_weights_header(weights, meta, calwin, calrecon, MODEL_DATA_CC.parent / "model_weights.h")
+        _gen_weights_header(
+            weights, meta, calwin, calrecon, MODEL_DATA_CC.parent / "model_weights.h"
+        )
         print(f"Saved: {MODEL_DATA_CC.parent / 'model_weights.h'} (C firmware FP32 weights)")
 
     print("Step 2: Building TF Keras model and copying weights...")
     keras_model = build_and_copy(weights, meta, x_np)
 
-    fp32_delta: Optional[float] = None
+    fp32_delta: float | None = None
     if verify:
         fp32_delta = _verify_fp32(keras_model, x_np, y_pt)
 
     print("Step 3: Converting to TFLite INT8...")
     tflite_bytes = _convert_tflite_int8(
-        keras_model, meta["n_features"], meta["window_size"],
-        weights=weights, cal_windows=cal_windows,
+        keras_model,
+        meta["n_features"],
+        meta["window_size"],
+        weights=weights,
+        cal_windows=cal_windows,
     )
 
-    int8_delta: Optional[float] = None
+    int8_delta: float | None = None
     if verify:
         int8_delta = _verify_int8(
             tflite_bytes, keras_model, meta["n_features"], meta["window_size"]

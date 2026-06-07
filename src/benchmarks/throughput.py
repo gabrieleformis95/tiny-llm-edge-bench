@@ -72,7 +72,7 @@ def run_throughput_benchmark(
 
     if median > 0 and iqr / median > NOISE_THRESHOLD:
         warnings.warn(
-            f"Throughput measurement is noisy: IQR/median = {iqr/median:.2f} "
+            f"Throughput measurement is noisy: IQR/median = {iqr / median:.2f} "
             f"(threshold {NOISE_THRESHOLD}). Consider re-running or investigating "
             "thermal throttling.",
             stacklevel=2,

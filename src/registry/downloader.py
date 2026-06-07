@@ -22,6 +22,11 @@ def download_gguf(model_id: str, quant_name: str) -> Path:
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     suffix = quant.file_suffix
+    if suffix is None:
+        raise ValueError(
+            f"Quant {quant_name!r} has no GGUF file_suffix (non-GGUF scheme); "
+            "GGUF download is only supported for gguf-scheme quants."
+        )
 
     cached = next(
         (p for p in cache_dir.glob("*.gguf") if p.name.lower().endswith(suffix.lower())),
@@ -32,13 +37,12 @@ def download_gguf(model_id: str, quant_name: str) -> Path:
         return cached
 
     candidates = [
-        f for f in list_repo_files(model.hf_gguf_repo)
+        f
+        for f in list_repo_files(model.hf_gguf_repo)
         if f.endswith(suffix) or f.lower().endswith(suffix.lower())
     ]
     if not candidates:
-        raise FileNotFoundError(
-            f"No GGUF file matching {suffix!r} in {model.hf_gguf_repo}"
-        )
+        raise FileNotFoundError(f"No GGUF file matching {suffix!r} in {model.hf_gguf_repo}")
     filename = candidates[0]
 
     local_path = cache_dir / Path(filename).name
@@ -48,7 +52,6 @@ def download_gguf(model_id: str, quant_name: str) -> Path:
         repo_id=model.hf_gguf_repo,
         filename=filename,
         local_dir=str(cache_dir),
-        local_dir_use_symlinks=False,
         token=settings.hf_token or None,
     )
     return Path(downloaded)
