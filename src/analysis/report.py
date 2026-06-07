@@ -189,37 +189,42 @@ def _plot_mcu_comparison(df: pd.DataFrame, out_path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(9, 5))
 
-    # Mac LLMs: params_b (B) vs ms/token (1000 / tps)
+    # Mac LLMs: one color per model (quants share a color) + a legend, so the
+    # clustered points don't need per-point text labels (which overlap badly).
     llm_sub = df.dropna(subset=["model_params_b", "tps_median"])
     if not llm_sub.empty:
-        for _, row in llm_sub.iterrows():
-            ms_per_tok = 1000.0 / row["tps_median"]
-            label = f"{row['model_id'].split('-instruct')[0]} {row['quant_name']}"
-            ax.scatter(row["model_params_b"] * 1e9, ms_per_tok,
-                       marker="o", s=80, zorder=3)
-            ax.annotate(label, (row["model_params_b"] * 1e9, ms_per_tok),
-                        fontsize=7, textcoords="offset points", xytext=(5, 3))
+        models = sorted(llm_sub["model_id"].unique(),
+                        key=lambda m: llm_sub[llm_sub["model_id"] == m]["model_params_b"].iloc[0])
+        cmap = plt.get_cmap("viridis")
+        colors = {m: cmap(i / max(len(models) - 1, 1)) for i, m in enumerate(models)}
+        for m in models:
+            sub = llm_sub[llm_sub["model_id"] == m]
+            short = m.split("-instruct")[0]
+            ax.scatter(sub["model_params_b"] * 1e9, 1000.0 / sub["tps_median"],
+                       marker="o", s=70, color=colors[m], edgecolor="white",
+                       linewidth=0.5, zorder=3, label=short)
 
-    # Cortex-M4 LSTM (165K params, 13.5 ms/inference, ESTIMATED)
+    # Cortex-M4 LSTM (isolated lower-left point: a single annotation is fine).
     if mcu_json.exists():
         mcu = json.loads(mcu_json.read_text())
         mcu_params = 165_000
         mcu_latency_ms = mcu.get("latency_us", 139404) / 1000.0
         sim = mcu.get("simulation_method", "")
         tag = "Renode sim" if "renode" in sim else "ESTIMATED"
-        ax.scatter(mcu_params, mcu_latency_ms, marker="^", s=120, color="red", zorder=4)
-        ax.annotate(f"LSTM-AE (Cortex-M4)\n[{tag}]",
-                    (mcu_params, mcu_latency_ms),
-                    fontsize=7, color="red", textcoords="offset points", xytext=(5, 3))
+        ax.scatter(mcu_params, mcu_latency_ms, marker="^", s=140, color="red",
+                   edgecolor="white", linewidth=0.5, zorder=4,
+                   label=f"LSTM-AE Cortex-M4 [{tag}]")
 
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Model parameters (log scale)")
-    ax.set_ylabel("Latency ms/token or ms/inference (log scale)")
+    ax.set_ylabel("Latency: ms/token (LLMs) or ms/inference (LSTM), log scale")
     ax.set_title("Mac LLMs vs Cortex-M4 LSTM: Model Size vs Latency")
     ax.grid(True, which="both", linestyle="--", alpha=0.4)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=8,
+              title="Model (each dot = one quant)", framealpha=0.9)
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 

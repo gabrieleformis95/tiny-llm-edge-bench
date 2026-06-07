@@ -151,12 +151,12 @@ def plot_operator_breakdown(profiles: list[OperatorProfile], out_path: Path) -> 
     x = np.arange(len(profiles))
     labels = [p.quant_name for p in profiles]
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 5))
     bottoms = np.zeros(len(profiles))
 
     for name, attr, color in operator_keys:
         vals = np.array([getattr(p, attr) * 100 for p in profiles])
-        ax.bar(x, vals, bottom=bottoms, label=name, color=color, width=0.55, alpha=0.9)
+        ax.bar(x, vals, bottom=bottoms, label=name, color=color, width=0.5, alpha=0.9)
         for i, (v, b) in enumerate(zip(vals, bottoms)):
             if v > 2.5:
                 ax.text(
@@ -168,14 +168,17 @@ def plot_operator_breakdown(profiles: list[OperatorProfile], out_path: Path) -> 
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=10)
+    ax.set_xlim(-0.6, len(profiles) - 0.4)
     ax.set_ylabel("Estimated % of decode time", fontsize=9)
     ax.set_title(
         f"Operator time breakdown - {profiles[0].model_id}\n"
         f"seq_len={profiles[0].seq_len}, memory-bandwidth model",
         fontsize=10,
     )
-    ax.legend(loc="upper right", fontsize=8, framealpha=0.8)
-    ax.set_ylim(0, 118)
+    # Legend outside the plot area so it never overlaps the bars.
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=8,
+              framealpha=0.9, title="Operator")
+    ax.set_ylim(0, 105)
     ax.set_yticks([])
 
     ax.text(
