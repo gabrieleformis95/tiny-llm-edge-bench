@@ -4,7 +4,7 @@ Reproducible benchmark suite for small open-source LLMs (0.5B-4B params) across 
 
 Answers the question: *what is the smallest model you can ship for a given task without breaking quality?*
 
-Part of a thematic pair with [predictive-maintenance-copilot](https://github.com/gabrieleformis/predictive-maintenance-copilot) - reuses the same industrial RAG golden set to validate that small quantized LLMs preserve explanation quality inside an edge ML pipeline.
+Part of a thematic pair with [predictive-maintenance-copilot](https://github.com/gabrieleformis95/predictive-maintenance-copilot) - reuses the same industrial RAG golden set to validate that small quantized LLMs preserve explanation quality inside an edge ML pipeline.
 
 ---
 
@@ -14,7 +14,7 @@ Part of a thematic pair with [predictive-maintenance-copilot](https://github.com
 
 *Edge AI runs on a continuum: from 165K-param LSTMs on Cortex-M4 to 3.8B-param LLMs on Apple Silicon. Same methodology, same code, both ends of the spectrum.*
 
-**Cross-project integration**: The [`predictive-maintenance-copilot`](https://github.com/gabrieleformis/predictive-maintenance-copilot) pipeline can be run end-to-end with `LLM_PROVIDER=tinyllm_local` swapping Mistral-7B for a quantized Phi-3.5-mini GGUF, with no code changes. A rigorous faithfulness comparison is forthcoming (see Limitations).
+**Cross-project integration**: The [`predictive-maintenance-copilot`](https://github.com/gabrieleformis95/predictive-maintenance-copilot) pipeline can be run end-to-end with `LLM_PROVIDER=tinyllm_local` swapping Mistral-7B for a quantized Phi-3.5-mini GGUF, with no code changes. A rigorous faithfulness comparison is forthcoming (see Limitations).
 
 ![Quality Degradation](reports/quality_degradation.png)
 
@@ -213,7 +213,7 @@ Results saved to `results/mcu_benchmark.json`.
 
 This project is the second half of a thematic pair:
 
-**[predictive-maintenance-copilot](https://github.com/gabrieleformis/predictive-maintenance-copilot)**
+**[predictive-maintenance-copilot](https://github.com/gabrieleformis95/predictive-maintenance-copilot)**
 is an end-to-end ML + RAG + LLM pipeline for industrial anomaly detection and
 explanation. It uses Mistral-7B (via Ollama/Groq) to generate maintenance
 recommendations grounded in equipment manuals.
