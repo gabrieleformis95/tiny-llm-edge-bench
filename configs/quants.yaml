@@ -1,0 +1,50 @@
+quants:
+  - name: FP16
+    scheme: gguf
+    bits: 16.0
+    file_suffix: "F16.gguf"
+    extra: {}
+
+  - name: Q8_0
+    scheme: gguf
+    bits: 8.0
+    file_suffix: "Q8_0.gguf"
+    extra: {}
+
+  - name: Q5_K_M
+    scheme: gguf
+    bits: 5.5
+    file_suffix: "Q5_K_M.gguf"
+    extra: {}
+
+  - name: Q4_K_M
+    scheme: gguf
+    bits: 4.5
+    file_suffix: "Q4_K_M.gguf"
+    extra: {}
+
+  - name: Q3_K_M
+    scheme: gguf
+    bits: 3.35
+    file_suffix: "Q3_K_M.gguf"
+    extra: {}
+
+  - name: Q2_K
+    scheme: gguf
+    bits: 2.63
+    file_suffix: "Q2_K.gguf"
+    extra: {}
+
+  - name: AWQ-INT4
+    scheme: awq
+    bits: 4.0
+    file_suffix: null
+    extra:
+      group_size: 128
+
+  - name: GPTQ-INT4
+    scheme: gptq
+    bits: 4.0
+    file_suffix: null
+    extra:
+      damp_percent: 0.01

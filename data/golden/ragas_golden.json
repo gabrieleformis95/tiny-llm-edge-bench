@@ -1,0 +1,74 @@
+[
+  {
+    "id": "ragas_001",
+    "question": "What are the main causes of high exhaust gas temperature in a turbofan engine?",
+    "contexts": [
+      "High exhaust gas temperature (EGT) in turbofan engines is most commonly caused by turbine blade degradation, which reduces aerodynamic efficiency and increases heat retention. Compressor fouling reduces the pressure ratio and forces the engine to compensate with higher fuel flow, raising EGT. Combustion chamber hot spots result from fuel nozzle blockage or wear. Inlet air distortion due to foreign object ingestion or icing can also cause uneven combustion.",
+      "Sensor_7 in the C-MAPSS dataset corresponds to total temperature at the high-pressure turbine (HPC) outlet. Elevated readings in sensor_7 consistently precede engine failure in FD001 and FD003 datasets. A sustained rise of more than 2 standard deviations above the established baseline is considered a warning threshold requiring maintenance investigation."
+    ],
+    "ground_truth": "High exhaust gas temperature (EGT) in turbofan engines is typically caused by turbine blade degradation, compressor fouling reducing efficiency, combustion chamber hot spots, excessive fuel flow, or inlet air distortion. Sensor readings for EGT (sensor_7) rising above baseline indicate thermal stress on turbine components."
+  },
+  {
+    "id": "ragas_002",
+    "question": "How does compressor degradation affect turbofan engine sensor readings?",
+    "contexts": [
+      "Compressor degradation manifests as fouling (deposits on blade surfaces), erosion (material removal from blade edges), and corrosion. Fouling reduces the mass flow rate and compressor efficiency. In the C-MAPSS sensor space, this appears as a decrease in fan inlet pressure (sensor_2) and an increase in corrected core speed (sensor_20) as the engine compensates.",
+      "Progressive compressor degradation increases the work required by the high-pressure compressor, leading to elevated fuel consumption and higher turbine inlet temperatures. Sensors monitoring HPC outlet pressure and temperature show monotonic drift as degradation accumulates over operational cycles."
+    ],
+    "ground_truth": "Compressor degradation causes decreased pressure ratios and reduced mass flow, observable in sensors tracking fan inlet pressure, compressor outlet temperature, and corrected speeds. As efficiency drops, the engine compensates by increasing fuel flow, which shows up as elevated EGT readings."
+  },
+  {
+    "id": "ragas_003",
+    "question": "What maintenance actions are recommended when anomalous vibration patterns are detected?",
+    "contexts": [
+      "When vibration sensors detect anomalous patterns, the standard response protocol is: (1) increase monitoring frequency from weekly to daily, (2) perform oil sample analysis to check for metal particles indicating wear, (3) schedule a borescope inspection within 100 operating hours, (4) apply vibration spectrum analysis to identify the fault frequency signature.",
+      "Bearing fault frequencies (BPFO, BPFI, BSF, FTF) derived from bearing geometry allow identification of the specific failing component. Imbalance shows as a dominant 1x rotational frequency component. Misalignment produces strong 2x and 3x harmonics. Early-stage faults are best detected through high-frequency resonance demodulation (envelope analysis)."
+    ],
+    "ground_truth": "Anomalous vibration patterns require increased monitoring frequency, oil sample analysis, scheduled borescope inspection, and vibration spectrum analysis. The specific maintenance action depends on the fault signature: bearing faults require bearing replacement, imbalance requires rotor rebalancing, and misalignment requires shaft realignment."
+  },
+  {
+    "id": "ragas_004",
+    "question": "What does a sudden drop in fan outlet pressure indicate in a gas turbine?",
+    "contexts": [
+      "Fan outlet pressure (sensor_2) provides a measure of the compression work done by the fan stage. A sudden drop indicates either a mechanical failure in the fan stage, a stall condition where airflow separates from blade surfaces, or a foreign object ingestion event. Stall is characterized by oscillatory pressure signals rather than a clean step drop.",
+      "In the C-MAPSS FD002 and FD004 datasets, which involve multiple operating conditions, sudden drops in sensor_2 coincide with rapid RUL degradation events. These events require immediate engine inspection and are flagged as priority anomalies by the autoencoder model when reconstruction error exceeds the 95th percentile threshold."
+    ],
+    "ground_truth": "A sudden drop in fan outlet pressure indicates a potential fan stage mechanical failure, compressor stall, or foreign object ingestion. It is treated as a priority anomaly requiring immediate inspection, as it correlates with rapid remaining useful life degradation."
+  },
+  {
+    "id": "ragas_005",
+    "question": "How is Remaining Useful Life estimated for turbofan engines?",
+    "contexts": [
+      "Remaining Useful Life (RUL) estimation for turbofan engines in the C-MAPSS dataset uses degradation trajectories derived from multivariate sensor streams. A common approach is to define a piece-wise linear target: RUL is capped at a maximum value (e.g., 125 cycles) early in life when the engine is healthy, then decreases linearly as degradation becomes detectable.",
+      "Deep learning approaches such as LSTM networks and convolutional networks trained on sliding windows of sensor readings achieve RMSE values of 12-18 cycles on FD001. The predictive-maintenance-copilot uses an LSTM autoencoder for anomaly detection; the reconstruction error serves as a health index that correlates with proximity to failure."
+    ],
+    "ground_truth": "RUL is estimated using degradation models trained on historical sensor trajectories. Piece-wise linear targets, LSTM networks, and autoencoder reconstruction error are common approaches. LSTM models achieve RMSE of 12-18 cycles on FD001. The reconstruction error from an autoencoder serves as a continuous health index."
+  },
+  {
+    "id": "ragas_006",
+    "question": "What sensor parameters are most predictive of turbofan engine failure?",
+    "contexts": [
+      "Feature importance analysis on the C-MAPSS FD001 dataset consistently identifies sensor_7 (HPC outlet temperature), sensor_12 (ratio of fuel flow to pressure), sensor_15 (bypass ratio), and sensor_20 (high-pressure shaft speed) as the top predictors of remaining useful life. These sensors show the strongest monotonic trends as the engine approaches failure.",
+      "Sensors with near-zero variance across all operating conditions in C-MAPSS (sensors 1, 5, 6, 10, 16, 18, 19) are typically dropped before model training as they carry no degradation signal. The remaining 14 sensors are used for condition monitoring. Normalization per operating condition is essential when multiple flight conditions are present."
+    ],
+    "ground_truth": "The most predictive sensors for turbofan failure are sensor_7 (HPC outlet temperature), sensor_12 (fuel flow ratio), sensor_15 (bypass ratio), and sensor_20 (shaft speed). Low-variance sensors are excluded. Normalization per operating condition is required for multi-condition datasets."
+  },
+  {
+    "id": "ragas_007",
+    "question": "What inspection intervals are recommended for turbine blade monitoring?",
+    "contexts": [
+      "Turbine blade inspection intervals depend on engine type and operating environment. For commercial aviation, borescope inspections are typically scheduled every 2,000-3,000 flight hours or after any high-vibration event. Hot section inspections occur every 6,000-8,000 hours. Blades operating in high-dust or high-salt environments require more frequent inspection due to accelerated erosion and corrosion.",
+      "Condition-based maintenance (CBM) approaches using continuous health monitoring can extend intervals for healthy engines while shortening them for degraded units. Predictive models that output a health score allow maintenance planners to optimize inspection scheduling dynamically rather than relying on fixed calendar or flight-hour thresholds."
+    ],
+    "ground_truth": "Turbine blade borescope inspections are typically every 2,000-3,000 flight hours, with hot section inspections every 6,000-8,000 hours. Condition-based maintenance using health scores can dynamically adjust these intervals, extending them for healthy engines and shortening them for degraded ones."
+  },
+  {
+    "id": "ragas_008",
+    "question": "How does engine washing affect sensor baseline readings?",
+    "contexts": [
+      "Engine washing removes compressor fouling deposits, partially restoring compressor efficiency. After a wash, operators observe a temporary improvement in EGT margin (the difference between current EGT and the maximum allowable EGT), reduction in fuel consumption, and a shift in sensor baselines back toward original values. This baseline shift must be accounted for in condition monitoring models.",
+      "Failure to account for engine washing events in predictive maintenance models can cause false alarms: the sudden improvement in sensor readings may be interpreted as a data anomaly rather than a maintenance event. Production-grade health monitoring systems log maintenance actions alongside sensor data to allow models to reset their degradation baseline after a wash."
+    ],
+    "ground_truth": "Engine washing restores compressor efficiency and shifts sensor baselines toward original values, improving EGT margin and reducing fuel consumption. Predictive maintenance models must log wash events and reset degradation baselines afterward to avoid false anomaly alerts."
+  }
+]

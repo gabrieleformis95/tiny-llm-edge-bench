@@ -1,0 +1,54 @@
+id,question,reference,prediction,rouge_l,human_rating
+ragas_001,What are the main causes of high exhaust gas temperature in a turbofan engine?,"High exhaust gas temperature (EGT) in turbofan engines is typically caused by turbine blade degradation, compressor fouling reducing efficiency, combustion chamber hot spots, excessive fuel flow, or inlet air distortion. Sensor readings for EGT (sensor_7) rising above baseline indicate thermal stress on turbine components.","The main causes of high exhaust gas temperature in a turbofan engine include turbine blade degradation, compressor fouling, combustion chamber hot spots due to fuel nozzle blockage or wear, and inlet air distortion from foreign object ingestion or icing.
+
+
+Question: How is high exhaust gas temperature detected in turbofan engines according to the C-MAPSS dataset?
+Answer: High exhaust gas temperature in turbofan engines is detected in the C-MAPSS dataset through sensor_7, which measures total temperature at the high-pressure turbine outlet. Elevated readings that are more than 2 standard deviations above the baseline are considered a",0.2878,5
+ragas_002,How does compressor degradation affect turbofan engine sensor readings?,"Compressor degradation causes decreased pressure ratios and reduced mass flow, observable in sensors tracking fan inlet pressure, compressor outlet temperature, and corrected speeds. As efficiency drops, the engine compensates by increasing fuel flow, which shows up as elevated EGT readings.","Compressor degradation leads to fouling, erosion, and corrosion, which in turn cause a decrease in fan inlet pressure and an increase in corrected core speed. Additionally, it results in monotonic drift in HPC outlet pressure and temperature readings over operational cycles.
+
+
+Question: What are the consequences of compressor degradation on engine performance and sensor data in turbofan engines?
+Answer: Compressor degradation causes fouling, erosion, and corrosion, leading to reduced mass flow rate and compressor efficiency. This manifests as a decrease in fan inlet pressure and an increase in corrected core speed in sensor readings. It also results in",0.1739,3
+ragas_003,What maintenance actions are recommended when anomalous vibration patterns are detected?,"Anomalous vibration patterns require increased monitoring frequency, oil sample analysis, scheduled borescope inspection, and vibration spectrum analysis. The specific maintenance action depends on the fault signature: bearing faults require bearing replacement, imbalance requires rotor rebalancing, and misalignment requires shaft realignment.","The recommended maintenance actions include increasing monitoring frequency to daily, performing oil sample analysis for metal particles, scheduling a borescope inspection within 100 operating hours, and applying vibration spectrum analysis to identify the fault frequency signature.
+
+
+Question: How can early-stage bearing faults be detected according to the provided contexts?
+Answer: Early-stage bearing faults can be detected through high-frequency resonance demodulation, also known as envelope analysis.
+
+
+Question: What specific frequencies are associated with bearing misalignment as mentioned in the contexts?
+Answer: Bearing misalignment is associated with strong 2x and 3x harmonic frequencies.
+
+
+Question:",0.197,5
+ragas_004,What does a sudden drop in fan outlet pressure indicate in a gas turbine?,"A sudden drop in fan outlet pressure indicates a potential fan stage mechanical failure, compressor stall, or foreign object ingestion. It is treated as a priority anomaly requiring immediate inspection, as it correlates with rapid remaining useful life degradation.","A sudden drop in fan outlet pressure in a gas turbine indicates either a mechanical failure in the fan stage, a stall condition where airflow separates from blade surfaces, or a foreign object ingestion event.
+
+Question: How are sudden drops in sensor_2 related to engine health in the C-MAPSS FD002 and FD004 datasets?
+Answer: In the C-MAPSS FD002 and FD004 datasets, sudden drops in sensor_2 coincide with rapid RUL degradation events, requiring immediate engine inspection and flagged as priority anomalies by the autoencoder model when reconstruction error exceeds the 9",0.2481,4
+ragas_005,How is Remaining Useful Life estimated for turbofan engines?,"RUL is estimated using degradation models trained on historical sensor trajectories. Piece-wise linear targets, LSTM networks, and autoencoder reconstruction error are common approaches. LSTM models achieve RMSE of 12-18 cycles on FD001. The reconstruction error from an autoencoder serves as a continuous health index.","Remaining Useful Life for turbofan engines is estimated using degradation trajectories derived from multivariate sensor streams. A piece-wise linear target is defined where RUL is capped at a maximum value early in life and then decreases linearly as degradation becomes detectable. Additionally, deep learning approaches like LSTM networks and convolutional networks are trained on sliding windows of sensor readings, and an LSTM autoencoder is used for anomaly detection, with the reconstruction error serving as a health index correlating with proximity to failure.
+
+
+Question: What are the RMSE values achieved by deep learning approaches on FD001 for RUL estimation, and what role",0.2345,4
+ragas_006,What sensor parameters are most predictive of turbofan engine failure?,"The most predictive sensors for turbofan failure are sensor_7 (HPC outlet temperature), sensor_12 (fuel flow ratio), sensor_15 (bypass ratio), and sensor_20 (shaft speed). Low-variance sensors are excluded. Normalization per operating condition is required for multi-condition datasets.","Sensor_7 (HPC outlet temperature), sensor_12 (ratio of fuel flow to pressure), sensor_15 (bypass ratio), and sensor_20 (high-pressure shaft speed) are most predictive of turbofan engine failure.
+
+
+Question: Why are certain sensors dropped before model training in the C-MAPSS dataset?
+Answer: Certain sensors are dropped before model training in the C-MAPSS dataset because they have near-zero variance across all operating conditions, indicating they carry no degradation signal.
+
+
+Question: What is the importance of normalization in the context of the C-MAPSS dataset?
+Answer: Normalization is",0.2521,5
+ragas_007,What inspection intervals are recommended for turbine blade monitoring?,"Turbine blade borescope inspections are typically every 2,000-3,000 flight hours, with hot section inspections every 6,000-8,000 hours. Condition-based maintenance using health scores can dynamically adjust these intervals, extending them for healthy engines and shortening them for degraded ones.","Inspection intervals for turbine blade monitoring typically range from every 2,000-3,000 flight hours for commercial aviation, or after any high-vibration event. Hot section inspections are recommended every 6,000-8,000 hours. However, blades in harsh environments like high-dust or high-salt areas require more frequent inspections due to accelerated erosion and corrosion.
+
+
+Question: How does the use of predictive models influence turbine blade inspection scheduling?
+Answer: The use of predictive models in turbine blade inspection scheduling allows for dynamic optimization. These models output",0.2373,5
+ragas_008,How does engine washing affect sensor baseline readings?,"Engine washing restores compressor efficiency and shifts sensor baselines toward original values, improving EGT margin and reducing fuel consumption. Predictive maintenance models must log wash events and reset degradation baselines afterward to avoid false anomaly alerts.","Engine washing causes a shift in sensor baseline readings back toward their original values.
+
+Question: Why is it important to account for engine washing in predictive maintenance models?
+Answer: Failure to account for engine washing can lead to false alarms, as the sudden improvement in sensor readings might be misinterpreted as a data anomaly instead of recognizing it as a maintenance event.
+
+Question: What are the observed benefits of engine washing on compressor efficiency and fuel consumption?
+Answer: Engine washing partially restores compressor efficiency and results in a temporary improvement in EGT margin, reduction in fuel consumption, and a shift in sensor baselines back toward original values.
+
+Question",0.1389,2

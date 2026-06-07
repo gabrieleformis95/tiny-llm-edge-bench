@@ -1,0 +1,28 @@
+tasks:
+  - id: ragas_industrial
+    kind: qa
+    dataset_path: data/golden/ragas_golden.json
+    metric: faithfulness
+    n_samples: 8
+    description: "RAG-grounded QA over industrial maintenance domain (from predictive-maintenance-copilot)"
+
+  - id: mmlu_subset
+    kind: classification
+    dataset_path: data/golden/mmlu_subset.json
+    metric: exact_match
+    n_samples: 200
+    description: "200-question MMLU subset (10 STEM/CS/ML subjects, 20 per subject). Source: cais/mmlu via HF."
+
+  - id: json_following
+    kind: json
+    dataset_path: data/prompts/json_following.json
+    metric: json_validity
+    n_samples: 20
+    description: "Structured JSON output adherence"
+
+  - id: instruction_follow
+    kind: classification
+    dataset_path: data/prompts/instruction_follow.json
+    metric: compliance_rate
+    n_samples: 30
+    description: "IFEval-style instruction compliance (length, format constraints)"

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "if_1",
+    "prompt": "Explain what a transformer model is. Your response must be exactly 3 sentences long.",
+    "constraints": [{"type": "sentence_count", "value": 3}]
+  },
+  {
+    "id": "if_2",
+    "prompt": "List five benefits of edge computing. Format your answer as a numbered list.",
+    "constraints": [{"type": "format", "value": "numbered_list"}, {"type": "item_count", "min": 5, "max": 5}]
+  },
+  {
+    "id": "if_3",
+    "prompt": "Summarize the concept of quantization in 50 words or fewer.",
+    "constraints": [{"type": "word_count_max", "value": 50}]
+  },
+  {
+    "id": "if_4",
+    "prompt": "Name three open-source LLMs with fewer than 4 billion parameters. Answer with only the model names, one per line, no additional text.",
+    "constraints": [{"type": "item_count", "min": 3, "max": 3}, {"type": "no_extra_text", "value": true}]
+  },
+  {
+    "id": "if_5",
+    "prompt": "Describe the difference between latency and throughput in at least 30 words.",
+    "constraints": [{"type": "word_count_min", "value": 30}]
+  },
+  {
+    "id": "if_6",
+    "prompt": "Write a haiku about machine learning. A haiku has 3 lines: 5 syllables, 7 syllables, 5 syllables.",
+    "constraints": [{"type": "line_count", "value": 3}]
+  },
+  {
+    "id": "if_7",
+    "prompt": "Respond to this message with a single word: what is the opposite of 'fast'?",
+    "constraints": [{"type": "word_count_max", "value": 1}]
+  },
+  {
+    "id": "if_8",
+    "prompt": "List the steps to train a neural network. Use bullet points (starting with '-') for each step.",
+    "constraints": [{"type": "format", "value": "bullet_list"}]
+  },
+  {
+    "id": "if_9",
+    "prompt": "Explain GGUF format in between 20 and 40 words.",
+    "constraints": [{"type": "word_count_min", "value": 20}, {"type": "word_count_max", "value": 40}]
+  },
+  {
+    "id": "if_10",
+    "prompt": "What does LLM stand for? Answer in exactly one sentence.",
+    "constraints": [{"type": "sentence_count", "value": 1}]
+  },
+  {
+    "id": "if_11",
+    "prompt": "Give me a 5-item numbered list of edge AI use cases.",
+    "constraints": [{"type": "format", "value": "numbered_list"}, {"type": "item_count", "min": 5, "max": 5}]
+  },
+  {
+    "id": "if_12",
+    "prompt": "Describe what a Pareto front is in no more than 25 words.",
+    "constraints": [{"type": "word_count_max", "value": 25}]
+  },
+  {
+    "id": "if_13",
+    "prompt": "Name exactly 4 hardware platforms suitable for edge AI inference. One per line.",
+    "constraints": [{"type": "item_count", "min": 4, "max": 4}]
+  },
+  {
+    "id": "if_14",
+    "prompt": "Write a two-sentence definition of 'model quantization'.",
+    "constraints": [{"type": "sentence_count", "value": 2}]
+  },
+  {
+    "id": "if_15",
+    "prompt": "List the 3 main components of the transformer architecture. Format as a numbered list.",
+    "constraints": [{"type": "format", "value": "numbered_list"}, {"type": "item_count", "min": 3, "max": 3}]
+  },
+  {
+    "id": "if_16",
+    "prompt": "Explain 'tokens per second' as a metric in at least 15 words and at most 35 words.",
+    "constraints": [{"type": "word_count_min", "value": 15}, {"type": "word_count_max", "value": 35}]
+  },
+  {
+    "id": "if_17",
+    "prompt": "Give a one-word answer: what language is PyTorch written in (at its core)?",
+    "constraints": [{"type": "word_count_max", "value": 1}]
+  },
+  {
+    "id": "if_18",
+    "prompt": "Describe the Apple Silicon unified memory architecture. Answer in exactly 4 sentences.",
+    "constraints": [{"type": "sentence_count", "value": 4}]
+  },
+  {
+    "id": "if_19",
+    "prompt": "List 6 quantization levels common in GGUF models, from highest to lowest bits. Use bullet points.",
+    "constraints": [{"type": "format", "value": "bullet_list"}, {"type": "item_count", "min": 6, "max": 6}]
+  },
+  {
+    "id": "if_20",
+    "prompt": "In exactly 2 sentences, explain why cold-start inference times should not be included in benchmarks.",
+    "constraints": [{"type": "sentence_count", "value": 2}]
+  },
+  {
+    "id": "if_21",
+    "prompt": "Summarize what RAG (Retrieval-Augmented Generation) does in under 20 words.",
+    "constraints": [{"type": "word_count_max", "value": 20}]
+  },
+  {
+    "id": "if_22",
+    "prompt": "Give me exactly 3 reasons why Q4_K_M is a popular quantization choice. Format as a numbered list.",
+    "constraints": [{"type": "format", "value": "numbered_list"}, {"type": "item_count", "min": 3, "max": 3}]
+  },
+  {
+    "id": "if_23",
+    "prompt": "What is the primary advantage of llama.cpp over full-precision inference? Answer in one sentence.",
+    "constraints": [{"type": "sentence_count", "value": 1}]
+  },
+  {
+    "id": "if_24",
+    "prompt": "Write between 10 and 20 words explaining what 'TTFT' (time-to-first-token) measures.",
+    "constraints": [{"type": "word_count_min", "value": 10}, {"type": "word_count_max", "value": 20}]
+  },
+  {
+    "id": "if_25",
+    "prompt": "Name exactly 2 Python libraries for benchmarking LLM inference. One per line, no explanations.",
+    "constraints": [{"type": "item_count", "min": 2, "max": 2}]
+  },
+  {
+    "id": "if_26",
+    "prompt": "Explain perplexity as an LLM evaluation metric in 3 sentences.",
+    "constraints": [{"type": "sentence_count", "value": 3}]
+  },
+  {
+    "id": "if_27",
+    "prompt": "List 4 tasks commonly used to evaluate instruction-following in LLMs. Use bullet points.",
+    "constraints": [{"type": "format", "value": "bullet_list"}, {"type": "item_count", "min": 4, "max": 4}]
+  },
+  {
+    "id": "if_28",
+    "prompt": "In at most 15 words, describe what 'joules per query' measures in LLM benchmarking.",
+    "constraints": [{"type": "word_count_max", "value": 15}]
+  },
+  {
+    "id": "if_29",
+    "prompt": "What is the Phi-3.5-mini model? Answer in exactly 2 sentences.",
+    "constraints": [{"type": "sentence_count", "value": 2}]
+  },
+  {
+    "id": "if_30",
+    "prompt": "Name 5 open metrics or benchmarks used to evaluate LLM quality. Numbered list only.",
+    "constraints": [{"type": "format", "value": "numbered_list"}, {"type": "item_count", "min": 5, "max": 5}]
+  }
+]

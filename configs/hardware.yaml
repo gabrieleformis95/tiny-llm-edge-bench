@@ -1,0 +1,42 @@
+profiles:
+  - id: mac_m1_8gb
+    family: apple_silicon
+    cores: 8
+    ram_gb: 8.0
+    can_run_powermetrics: true
+
+  - id: mac_m1_16gb
+    family: apple_silicon
+    cores: 8
+    ram_gb: 16.0
+    can_run_powermetrics: true
+
+  - id: mac_m2_pro_16gb
+    family: apple_silicon
+    cores: 12
+    ram_gb: 16.0
+    can_run_powermetrics: true
+
+  - id: mac_m2_pro_32gb
+    family: apple_silicon
+    cores: 12
+    ram_gb: 32.0
+    can_run_powermetrics: true
+
+  - id: mac_m3_pro_18gb
+    family: apple_silicon
+    cores: 11
+    ram_gb: 18.0
+    can_run_powermetrics: true
+
+  - id: rpi5_8gb
+    family: rpi
+    cores: 4
+    ram_gb: 8.0
+    can_run_powermetrics: false
+
+  - id: linux_x86_generic
+    family: x86_linux
+    cores: 0  # detected at runtime
+    ram_gb: 0.0  # detected at runtime
+    can_run_powermetrics: false

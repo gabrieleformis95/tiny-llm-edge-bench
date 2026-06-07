@@ -1,0 +1,102 @@
+[
+  {
+    "id": "short_1",
+    "prompt": "What is the capital of France?",
+    "category": "short"
+  },
+  {
+    "id": "short_2",
+    "prompt": "Convert 100 Fahrenheit to Celsius.",
+    "category": "short"
+  },
+  {
+    "id": "short_3",
+    "prompt": "List three programming languages used for systems programming.",
+    "category": "short"
+  },
+  {
+    "id": "short_4",
+    "prompt": "What does HTTP stand for?",
+    "category": "short"
+  },
+  {
+    "id": "short_5",
+    "prompt": "Explain what a neural network is in one sentence.",
+    "category": "short"
+  },
+  {
+    "id": "medium_1",
+    "prompt": "Explain the difference between a process and a thread. When would you use one over the other?",
+    "category": "medium"
+  },
+  {
+    "id": "medium_2",
+    "prompt": "What is gradient descent and how does learning rate affect convergence?",
+    "category": "medium"
+  },
+  {
+    "id": "medium_3",
+    "prompt": "Describe how a relational database index works and when indexes can hurt performance.",
+    "category": "medium"
+  },
+  {
+    "id": "medium_4",
+    "prompt": "What is the difference between precision and recall? Give a concrete example where optimizing one hurts the other.",
+    "category": "medium"
+  },
+  {
+    "id": "medium_5",
+    "prompt": "How does HTTPS work? Describe the TLS handshake at a conceptual level.",
+    "category": "medium"
+  },
+  {
+    "id": "medium_6",
+    "prompt": "What is attention in the context of neural networks, and why was it a breakthrough for sequence-to-sequence tasks?",
+    "category": "medium"
+  },
+  {
+    "id": "medium_7",
+    "prompt": "Explain the bias-variance tradeoff and how regularization techniques like L1 and L2 address it.",
+    "category": "medium"
+  },
+  {
+    "id": "medium_8",
+    "prompt": "What are the main differences between REST and gRPC? When would you prefer one over the other in a microservices architecture?",
+    "category": "medium"
+  },
+  {
+    "id": "medium_9",
+    "prompt": "Describe the CAP theorem. Give a real-world example of a system that chooses consistency over availability.",
+    "category": "medium"
+  },
+  {
+    "id": "medium_10",
+    "prompt": "What is tokenization in NLP and why does the choice of tokenizer matter for model performance on different languages?",
+    "category": "medium"
+  },
+  {
+    "id": "long_1",
+    "prompt": "Explain the key differences between supervised, unsupervised, and reinforcement learning. Include concrete examples for each paradigm and discuss when you would choose one over the others. Focus on the practical implications for a machine learning practitioner working on real-world industrial applications.",
+    "category": "long"
+  },
+  {
+    "id": "long_2",
+    "prompt": "Describe the architecture and training process of a transformer model. Start from the attention mechanism, explain multi-head attention, then cover positional encodings, the encoder-decoder structure, and finally touch on how modern LLMs like GPT adapt this architecture for autoregressive language modeling.",
+    "category": "long"
+  },
+  {
+    "id": "long_3",
+    "prompt": "You are an expert in predictive maintenance for industrial equipment. A manufacturing plant has rotating machinery (pumps, compressors, motors) with vibration and temperature sensors. Design a monitoring strategy that combines rule-based alerts with machine learning anomaly detection. Discuss data collection frequency, feature engineering, model choices, and how to handle concept drift.",
+    "category": "long"
+  },
+  {
+    "id": "long_4",
+    "prompt": "Compare quantization approaches for deploying large language models on edge devices: post-training quantization (PTQ) vs quantization-aware training (QAT), and within PTQ compare GPTQ, AWQ, and GGUF/llama.cpp approaches. Discuss trade-offs in quality, speed, memory footprint, and ease of deployment on Apple Silicon vs ARM Linux.",
+    "category": "long"
+  },
+  {
+    "id": "long_5",
+    "prompt": "Write a technical design document for a benchmark suite that evaluates small language models (0.5B-4B parameters) across multiple quantization levels on consumer hardware. Cover: goals and non-goals, methodology (warmup, statistical significance, reproducibility), metrics (throughput, latency, RAM, power), quality evaluation tasks, and how to present results on a Pareto frontier.",
+    "category": "long"
+  }
+]

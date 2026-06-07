@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "phase-*"]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dev deps
+        run: pip install ruff mypy types-PyYAML types-psutil
+      - name: Ruff lint
+        run: ruff check src/ tests/ scripts/
+      - name: Ruff format check
+        run: ruff format --check src/ tests/ scripts/
+      - name: Mypy
+        run: mypy src/
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (no llama-cpp-python / mlx on CI)
+        run: |
+          pip install pydantic pydantic-settings typer rich numpy pandas \
+            pyarrow pyyaml huggingface_hub psutil matplotlib streamlit \
+            pytest pytest-cov
+      - name: Run tests
+        run: pytest tests/ --tb=short -q

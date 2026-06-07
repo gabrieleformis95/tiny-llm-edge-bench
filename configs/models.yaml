@@ -1,0 +1,25 @@
+models:
+  - id: qwen2.5-0.5b-instruct
+    hf_gguf_repo: Qwen/Qwen2.5-0.5B-Instruct-GGUF
+    params_b: 0.5
+    context_len: 32768
+    chat_template: chatml
+
+  - id: llama-3.2-1b-instruct
+    hf_gguf_repo: bartowski/Llama-3.2-1B-Instruct-GGUF
+    params_b: 1.0
+    context_len: 131072
+    chat_template: llama3
+
+  - id: qwen2.5-3b-instruct
+    hf_gguf_repo: Qwen/Qwen2.5-3B-Instruct-GGUF
+    params_b: 3.0
+    context_len: 32768
+    chat_template: chatml
+
+  - id: phi-3.5-mini-instruct
+    hf_gguf_repo: bartowski/Phi-3.5-mini-instruct-GGUF
+    params_b: 3.8
+    context_len: 131072
+    chat_template: phi3
+

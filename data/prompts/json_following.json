@@ -1,0 +1,102 @@
+[
+  {
+    "id": "json_1",
+    "instruction": "Return a JSON object with fields: name (string), age (integer), city (string).",
+    "required_keys": ["name", "age", "city"]
+  },
+  {
+    "id": "json_2",
+    "instruction": "Return a JSON object representing a product with fields: product_id (string), price (number), in_stock (boolean), tags (array of strings).",
+    "required_keys": ["product_id", "price", "in_stock", "tags"]
+  },
+  {
+    "id": "json_3",
+    "instruction": "Return a JSON object for a sensor reading: sensor_id (string), timestamp (string ISO8601), value (number), unit (string), anomaly (boolean).",
+    "required_keys": ["sensor_id", "timestamp", "value", "unit", "anomaly"]
+  },
+  {
+    "id": "json_4",
+    "instruction": "Return a JSON object for a machine fault event: machine_id (string), fault_code (string), severity (one of: low, medium, high, critical), description (string), recommended_action (string).",
+    "required_keys": ["machine_id", "fault_code", "severity", "description", "recommended_action"]
+  },
+  {
+    "id": "json_5",
+    "instruction": "Return a JSON object with fields: model_name (string), params_billion (number), quantization (string), tokens_per_second (number), peak_ram_mb (number).",
+    "required_keys": ["model_name", "params_billion", "quantization", "tokens_per_second", "peak_ram_mb"]
+  },
+  {
+    "id": "json_6",
+    "instruction": "Return a JSON object for a maintenance schedule entry: equipment_id (string), next_maintenance_date (string), maintenance_type (string), assigned_technician (string), estimated_duration_hours (number).",
+    "required_keys": ["equipment_id", "next_maintenance_date", "maintenance_type", "assigned_technician", "estimated_duration_hours"]
+  },
+  {
+    "id": "json_7",
+    "instruction": "Return a JSON object for a benchmark result: run_id (string), model (string), quant (string), task (string), score (number between 0 and 1), latency_p95_ms (number).",
+    "required_keys": ["run_id", "model", "quant", "task", "score", "latency_p95_ms"]
+  },
+  {
+    "id": "json_8",
+    "instruction": "Return a JSON object for a datacenter rack: rack_id (string), location (string), servers (array of objects, each with server_id and cpu_cores), total_power_kw (number).",
+    "required_keys": ["rack_id", "location", "servers", "total_power_kw"]
+  },
+  {
+    "id": "json_9",
+    "instruction": "Return a JSON object describing a Python package: name (string), version (string), dependencies (array of strings), license (string), python_requires (string).",
+    "required_keys": ["name", "version", "dependencies", "license", "python_requires"]
+  },
+  {
+    "id": "json_10",
+    "instruction": "Return a JSON object for a temperature alert: zone (string), current_temp_celsius (number), threshold_celsius (number), alert_level (string), timestamp (string).",
+    "required_keys": ["zone", "current_temp_celsius", "threshold_celsius", "alert_level", "timestamp"]
+  },
+  {
+    "id": "json_11",
+    "instruction": "Return a JSON object for a user profile: user_id (string), email (string), role (string), permissions (array of strings), last_login (string ISO8601).",
+    "required_keys": ["user_id", "email", "role", "permissions", "last_login"]
+  },
+  {
+    "id": "json_12",
+    "instruction": "Return a JSON object for a vibration analysis report: asset_id (string), frequency_hz (number), amplitude_mm_s (number), bearing_fault_detected (boolean), rms_velocity (number).",
+    "required_keys": ["asset_id", "frequency_hz", "amplitude_mm_s", "bearing_fault_detected", "rms_velocity"]
+  },
+  {
+    "id": "json_13",
+    "instruction": "Return a JSON object for a model evaluation summary: model_id (string), tasks_completed (array of strings), average_score (number), hardware (string), duration_minutes (number).",
+    "required_keys": ["model_id", "tasks_completed", "average_score", "hardware", "duration_minutes"]
+  },
+  {
+    "id": "json_14",
+    "instruction": "Return a JSON object for a factory shift report: shift_id (string), start_time (string), end_time (string), units_produced (integer), defect_rate (number), operator_ids (array of strings).",
+    "required_keys": ["shift_id", "start_time", "end_time", "units_produced", "defect_rate", "operator_ids"]
+  },
+  {
+    "id": "json_15",
+    "instruction": "Return a JSON object describing a network device: device_id (string), ip_address (string), mac_address (string), firmware_version (string), uptime_hours (number), online (boolean).",
+    "required_keys": ["device_id", "ip_address", "mac_address", "firmware_version", "uptime_hours", "online"]
+  },
+  {
+    "id": "json_16",
+    "instruction": "Return a JSON object for an anomaly detection result: detector_id (string), timestamp (string), anomaly_score (number between 0 and 1), is_anomaly (boolean), features (object with at least two numeric fields).",
+    "required_keys": ["detector_id", "timestamp", "anomaly_score", "is_anomaly", "features"]
+  },
+  {
+    "id": "json_17",
+    "instruction": "Return a JSON object for an API response: status (string, one of: success, error), data (object or null), error_message (string or null), request_id (string), latency_ms (number).",
+    "required_keys": ["status", "data", "error_message", "request_id", "latency_ms"]
+  },
+  {
+    "id": "json_18",
+    "instruction": "Return a JSON object for a pump health record: pump_id (string), flow_rate_lpm (number), pressure_bar (number), efficiency_percent (number), health_score (number between 0 and 100), warnings (array of strings).",
+    "required_keys": ["pump_id", "flow_rate_lpm", "pressure_bar", "efficiency_percent", "health_score", "warnings"]
+  },
+  {
+    "id": "json_19",
+    "instruction": "Return a JSON object for a code review finding: file_path (string), line_number (integer), severity (one of: info, warning, error), rule_id (string), message (string), suggestion (string).",
+    "required_keys": ["file_path", "line_number", "severity", "rule_id", "message", "suggestion"]
+  },
+  {
+    "id": "json_20",
+    "instruction": "Return a JSON object for a training run metadata: experiment_id (string), model_architecture (string), dataset (string), epochs (integer), final_loss (number), best_accuracy (number), hyperparameters (object).",
+    "required_keys": ["experiment_id", "model_architecture", "dataset", "epochs", "final_loss", "best_accuracy", "hyperparameters"]
+  }
+]
